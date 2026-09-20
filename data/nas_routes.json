@@ -1,0 +1,16 @@
+{
+  "_source": "How to archive ILP content.docx - Appendix 2: NAS drive location for archival",
+  "routes": {
+    "dubbed_yt":        { "path": "ILP NAS Drive/video-edit-tr-pub",   "label": "Public videos" },
+    "other_channel_yt": { "path": "ILP NAS Drive/video-edit-tr-pub",   "label": "Public videos" },
+    "unlisted_yt":      { "path": "ILP NAS Drive/video-edit-tr-priv1", "label": "Program content / unlisted" },
+    "department":       { "path": "ILP NAS Drive/video-edit-tr-priv1", "label": "Program content" },
+    "sg_exclusive":     { "path": "ILP NAS Drive/video-edit-tr-priv1", "label": "Program content" },
+    "instagram":        { "path": "ILP NAS Drive/video-edit-tr-pub",   "label": "Public videos" },
+    "satsang":          { "path": "ILP NAS Drive/video-edit-tr-priv1", "label": "Satsang videos" },
+    "dept_backup":      { "path": "ILP NAS Drive/dept-ilp",            "label": "Department backup" }
+  },
+  "other": {
+    "br_tr_meet": { "path": "ILP NAS Drive/video-edit-tr-priv2", "label": "Br/Tr meet content - choose manually" }
+  }
+}

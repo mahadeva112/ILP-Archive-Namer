@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILP Archive Namer — UI mockup</title>
+<style>
+/* ============================================================== tokens
+   Same warm terracotta identity as the shipped app, retuned: one neutral
+   ramp instead of four ad-hoc greys, a type scale, and a light theme. */
+:root {
+  --bg:        #0d0c0b;
+  --surface:   #161412;
+  --surface-2: #1d1b18;
+  --surface-3: #252220;
+  --line:      #2e2a26;
+  --line-soft: #211e1c;
+
+  --text:      #f2f0ee;
+  --text-2:    #c3beb8;
+  --text-3:    #8d8781;
+
+  --accent:    #e0885f;
+  --accent-2:  #cbab78;
+  --ok:        #66c79a;
+  --warn:      #e3b656;
+  --bad:       #f06a78;
+  --info:      #93abdd;
+
+  --accent-bg: rgba(224,136,95,.14);
+  --accent-ln: rgba(224,136,95,.38);
+  --ok-bg:     rgba(102,199,154,.13);
+  --ok-ln:     rgba(102,199,154,.34);
+  --warn-bg:   rgba(227,182,86,.12);
+  --warn-ln:   rgba(227,182,86,.32);
+  --bad-bg:    rgba(240,106,120,.12);
+  --bad-ln:    rgba(240,106,120,.34);
+  --info-bg:   rgba(147,171,221,.12);
+  --info-ln:   rgba(147,171,221,.32);
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,.35);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.34);
+  --ring: 0 0 0 3px rgba(224,136,95,.28);
+
+  --r-sm: 6px; --r: 10px; --r-lg: 14px;
+  --mono: "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg:        #faf7f4;
+  --surface:   #ffffff;
+  --surface-2: #f5f0eb;
+  --surface-3: #ebe4dd;
+  --line:      #e2d9d0;
+  --line-soft: #ede6de;
+
+  --text:      #221e1b;
+  --text-2:    #574f48;
+  --text-3:    #867c73;
+
+  --accent:    #b85c33;
+  --accent-2:  #8d7140;
+  --ok:        #1f7d54;
+  --warn:      #906a16;
+  --bad:       #c33547;
+  --info:      #45619b;
+
+  --accent-bg: rgba(184,92,51,.09);
+  --accent-ln: rgba(184,92,51,.28);
+  --ok-bg:     rgba(31,125,84,.09);
+  --ok-ln:     rgba(31,125,84,.26);
+  --warn-bg:   rgba(144,106,22,.1);
+  --warn-ln:   rgba(144,106,22,.26);
+  --bad-bg:    rgba(195,53,71,.08);
+  --bad-ln:    rgba(195,53,71,.26);
+  --info-bg:   rgba(69,97,155,.09);
+  --info-ln:   rgba(69,97,155,.26);
+
+  --shadow-1: 0 1px 2px rgba(60,40,25,.07);
+  --shadow-2: 0 1px 3px rgba(60,40,25,.08), 0 10px 26px rgba(60,40,25,.09);
+  --ring: 0 0 0 3px rgba(184,92,51,.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font-family: inherit; }
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-sm); }
+
+/* ============================================================== shell */
+.app { display: grid; grid-template-columns: 236px minmax(0,1fr); min-height: 100vh; }
+
+/* ------------------------------------------------------------ sidebar
+   The five tabs became a rail: destinations that never wrap or scroll
+   sideways, with room to show the state of the thing being named. */
+.rail {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 16px 16px 14px; }
+.brand svg { width: 34px; height: 34px; flex: 0 0 auto; filter: drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.brand h1 { font-size: 13.5px; font-weight: 650; letter-spacing: -.01em; }
+.brand p  { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+.nav { padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; }
+.nav-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-3); padding: 14px 8px 6px;
+}
+.nav button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border: 1px solid transparent; border-radius: 8px;
+  background: none; color: var(--text-2); font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: left; transition: background .13s, color .13s;
+}
+.nav button svg { width: 16px; height: 16px; flex: 0 0 auto; opacity: .85; }
+.nav button:hover { background: var(--surface-2); color: var(--text); }
+.nav button.on { background: var(--accent-bg); border-color: var(--accent-ln); color: var(--accent); }
+.nav .kbd { margin-left: auto; }
+
+.rail-foot { margin-top: auto; padding: 12px 14px 14px; border-top: 1px solid var(--line-soft); }
+.stamp { font-family: var(--mono); font-size: 10.5px; color: var(--text-3); line-height: 1.7; }
+
+/* --------------------------------------------------------------- top */
+.top {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 24px; height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.crumb { font-size: 13px; font-weight: 650; }
+.crumb span { color: var(--text-3); font-weight: 400; }
+
+/* The generated name follows you across every screen, so switching to
+   Reference mid-task never loses it. */
+.live {
+  margin-left: auto; display: flex; align-items: center; gap: 9px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 100px; padding: 5px 6px 5px 13px; max-width: 44%; min-width: 0;
+}
+.live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
+             flex: 0 0 auto; box-shadow: 0 0 0 3px var(--ok-bg); }
+.live code {
+  font-family: var(--mono); font-size: 11.5px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.icon-btn {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  background: none; border: 1px solid transparent; border-radius: 8px;
+  color: var(--text-3); cursor: pointer; flex: 0 0 auto; transition: .13s;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--line); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+.main { min-width: 0; }
+.screen { display: none; padding: 22px 24px 96px; max-width: 1500px; }
+.screen.on { display: block; }
+
+/* ============================================================== atoms */
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 18px; box-shadow: var(--shadow-1);
+}
+.card + .card { margin-top: 16px; }
+.card-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 5px; }
+.card-hd h2 { font-size: 13.5px; font-weight: 650; }
+.card-sub { font-size: 12px; color: var(--text-3); line-height: 1.55; margin-bottom: 16px; }
+.card-sub:last-child { margin-bottom: 0; }
+
+.eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 10px;
+}
+.chip {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 2.5px 7px; border-radius: 100px;
+  background: var(--surface-2); color: var(--accent-2); border: 1px solid var(--line);
+}
+.kbd {
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 4px; padding: 1px 5px; background: var(--surface-2);
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 650; letter-spacing: .03em;
+  padding: 3px 9px; border-radius: 100px; white-space: nowrap;
+}
+.pill.ok   { background: var(--ok-bg);   color: var(--ok);   border: 1px solid var(--ok-ln); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-ln); }
+.pill.bad  { background: var(--bad-bg);  color: var(--bad);  border: 1px solid var(--bad-ln); }
+.pill.mute { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--line); }
+.pill.info { background: var(--info-bg); color: var(--info); border: 1px solid var(--info-ln); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+  padding: 8px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: .13s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent-ln); color: var(--accent); }
+.btn svg { width: 14px; height: 14px; }
+.btn.primary {
+  background: linear-gradient(140deg, var(--accent), #c8704b);
+  border-color: transparent; color: #fff; box-shadow: var(--shadow-1);
+}
+.btn.primary:hover { filter: brightness(1.07); color: #fff; }
+.btn.sm { padding: 5px 10px; font-size: 11.5px; border-radius: 7px; }
+.btn.danger:hover { border-color: var(--bad-ln); background: var(--bad-bg); color: var(--bad); }
+.btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 6px;
+}
+.field label .req { color: var(--bad); }
+.inp {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--text);
+  outline: none; transition: border-color .13s, box-shadow .13s;
+}
+.inp:focus { border-color: var(--accent); box-shadow: var(--ring); }
+.inp::placeholder { color: var(--text-3); }
+.inp.mono { font-family: var(--mono); font-size: 12.5px; }
+select.inp {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-3) 50%),
+                    linear-gradient(135deg, var(--text-3) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 32px;
+}
+.hint { font-size: 11px; color: var(--text-3); margin-top: 5px; line-height: 1.5; }
+.hint code, .rules code, .ref-tbl code, .note code {
+  font-family: var(--mono); font-size: 10.5px; color: var(--accent);
+  background: var(--accent-bg); padding: 1px 5px; border-radius: 4px;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.with-btn { display: flex; gap: 8px; }
+.with-btn .inp { flex: 1; min-width: 0; }
+
+.split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.12fr); gap: 18px; align-items: start; }
+.sticky { position: sticky; top: 72px; }
+
+/* ================================================= category selector
+   Eight flat buttons became two groups with the spec reference and the
+   shape of the name on each card, so you pick by recognition. */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px,1fr)); gap: 9px; }
+.cat {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 12px; color: var(--text); transition: .13s;
+}
+.cat:hover { border-color: var(--accent-ln); background: var(--surface-2); transform: translateY(-1px); }
+.cat.on { border-color: var(--accent); background: var(--accent-bg); box-shadow: inset 0 0 0 1px var(--accent-ln); }
+.cat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.cat-ref { font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--accent); }
+.cat-name { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+.cat-shape { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 5px; letter-spacing: -.01em; }
+.cat.on .cat-shape { color: var(--accent-2); }
+.cat-check { margin-left: auto; color: var(--accent); display: none; }
+.cat.on .cat-check { display: block; }
+.cat-check svg { width: 14px; height: 14px; }
+
+/* ==================================================== name breakdown
+   The headline change. Instead of one long green string, every token is
+   its own colour-coded piece with the field that produced it named under
+   it — so a wrong language code or a swapped field is visible, not read
+   character by character. */
+.name-stage {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 16px 14px; overflow-x: auto;
+}
+[data-theme="light"] .name-stage { background: var(--surface-2); }
+.segs { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 2px; }
+.seg { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-bottom: 2px; }
+.seg .tok {
+  font-family: var(--mono); font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+  padding: 5px 8px; border-radius: 7px; border: 1px solid transparent; cursor: default;
+  transition: .13s; white-space: nowrap;
+}
+.seg .cap {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.seg.sep .tok { color: var(--text-3); font-weight: 400; padding-left: 2px; padding-right: 2px; }
+.seg.c1 .tok { color: var(--accent);   background: var(--accent-bg); border-color: var(--accent-ln); }
+.seg.c2 .tok { color: var(--accent-2); background: rgba(203,171,120,.12); border-color: rgba(203,171,120,.3); }
+.seg.c3 .tok { color: var(--ok);       background: var(--ok-bg);     border-color: var(--ok-ln); }
+.seg.c4 .tok { color: var(--info);     background: var(--info-bg);   border-color: var(--info-ln); }
+.seg.bad .tok { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-ln);
+                text-decoration: underline wavy var(--bad-ln) 1.5px; text-underline-offset: 4px; }
+.seg:not(.sep):hover .tok { filter: brightness(1.14); transform: translateY(-1px); }
+.seg .cap b { color: var(--text-2); font-weight: 700; }
+
+.verdict {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 13px; border-top: 1px dashed var(--line);
+  font-size: 12px; color: var(--text-3);
+}
+.rule-dots { display: flex; gap: 4px; margin-left: auto; }
+.rule-dots i {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--ok); opacity: .8;
+  display: block;
+}
+.rule-dots i.off { background: var(--surface-3); }
+
+.copybar { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+.copybar .eyebrow { margin: 0; }
+.copybar .sp { flex: 1; }
+
+/* ------------------------------------------------------------- issues */
+.issue {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 12.5px; line-height: 1.5; padding: 10px 12px; border-radius: 9px; margin-top: 8px;
+}
+.issue .ico { flex: 0 0 auto; margin-top: 1px; }
+.issue .ico svg { width: 15px; height: 15px; display: block; }
+.issue b { font-weight: 650; }
+.issue .rule { font-family: var(--mono); font-size: 10px; opacity: .75; margin-left: auto; white-space: nowrap; }
+.issue.bad  { background: var(--bad-bg);  border: 1px solid var(--bad-ln);  color: var(--bad); }
+.issue.warn { background: var(--warn-bg); border: 1px solid var(--warn-ln); color: var(--warn); }
+.issue.ok   { background: var(--ok-bg);   border: 1px solid var(--ok-ln);   color: var(--ok); }
+.issue.info { background: var(--info-bg); border: 1px solid var(--info-ln); color: var(--info); }
+
+/* --------------------------------------------------------------- NAS */
+.nas {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 12px; color: var(--accent-2);
+  background: rgba(203,171,120,.09); border: 1px solid rgba(203,171,120,.26);
+  border-radius: 10px; padding: 11px 13px; word-break: break-all;
+}
+.nas svg { width: 15px; height: 15px; flex: 0 0 auto; opacity: .8; }
+
+/* ================================================== files / tree view
+   Filenames grouped under the subfolder they land in, because that is
+   the question being answered: what goes where. */
+.tree { font-family: var(--mono); font-size: 12px; line-height: 1.9; }
+.tree .folder { color: var(--warn); font-weight: 600; }
+.tree .file { color: var(--ok); }
+.tree .dim { color: var(--text-3); }
+
+.fgroup { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.fgroup + .fgroup { margin-top: 10px; }
+.fgroup-hd {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+  background: var(--surface-2); border-bottom: 1px solid var(--line);
+}
+.fgroup-hd svg { width: 14px; height: 14px; color: var(--warn); flex: 0 0 auto; }
+.fgroup-hd .nm { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.fgroup-hd .ct { margin-left: auto; font-size: 11px; color: var(--text-3); }
+.frow { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-top: 1px solid var(--line-soft); }
+.frow:first-child { border-top: none; }
+.frow:hover { background: var(--surface-2); }
+.frow .fn { font-family: var(--mono); font-size: 11.5px; color: var(--ok); word-break: break-all; }
+.frow .fm { font-size: 10.5px; color: var(--text-3); margin-top: 3px; line-height: 1.45; }
+.frow .fmain { flex: 1; min-width: 0; }
+
+/* =========================================================== stepper */
+.steps { display: flex; gap: 0; margin-bottom: 18px; }
+.step { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+        border: 1px solid var(--line); background: var(--surface); position: relative; }
+.step:first-child { border-radius: 11px 0 0 11px; }
+.step:last-child  { border-radius: 0 11px 11px 0; }
+.step + .step { border-left: none; }
+.step .num {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; flex: 0 0 auto;
+  background: var(--surface-3); color: var(--text-3); border: 1px solid var(--line);
+}
+.step .ttl { font-size: 12.5px; font-weight: 600; }
+.step .sub { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+.step.done .num { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-ln); }
+.step.done .ttl { color: var(--text-2); }
+.step.now { background: var(--accent-bg); border-color: var(--accent-ln); z-index: 1; }
+.step.now .num { background: var(--accent); color: #fff; border-color: transparent; }
+.step.now .ttl { color: var(--accent); }
+
+/* ------------------------------------------------------- plan / diff */
+.plan { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.plan-hd {
+  display: flex; align-items: center; gap: 10px; padding: 10px 13px;
+  background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px;
+}
+.plan-hd .sp { flex: 1; }
+.map-row { display: grid; grid-template-columns: minmax(0,1fr) 150px minmax(0,1.15fr) auto;
+           gap: 12px; align-items: center; padding: 10px 13px; border-top: 1px solid var(--line-soft); }
+.map-row:first-child { border-top: none; }
+.map-row:hover { background: var(--surface-2); }
+.map-src { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); word-break: break-all; }
+.map-dst { font-family: var(--mono); font-size: 11.5px; color: var(--ok); word-break: break-all; }
+.map-dst .path { color: var(--text-3); }
+.map-row select.inp { padding: 5px 26px 5px 9px; font-size: 11.5px; border-radius: 7px; background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; }
+.map-head { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+
+.seg-ctl { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 3px; }
+.seg-ctl button {
+  border: none; background: none; color: var(--text-3); cursor: pointer;
+  font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 7px; transition: .13s;
+}
+.seg-ctl button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
+.seg-ctl button.on.warn { color: var(--warn); }
+
+.callout {
+  display: flex; gap: 10px; font-size: 12px; line-height: 1.55;
+  border-radius: 10px; padding: 11px 13px; margin-top: 12px;
+}
+.callout svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
+.callout.warn { background: var(--warn-bg); border: 1px solid var(--warn-ln); color: var(--warn); }
+.callout.info { background: var(--info-bg); border: 1px solid var(--info-ln); color: var(--info); }
+
+.checkline { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: var(--text-2); margin-top: 12px; }
+.checkline input { margin-top: 2px; accent-color: var(--accent); }
+
+/* ---------------------------------------------------------- actionbar
+   The commit action is always reachable without hunting for the button
+   that belongs to the step you are on. */
+.actionbar {
+  position: fixed; left: 236px; right: 0; bottom: 0; z-index: 25;
+  display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+  background: var(--surface); border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgba(0,0,0,.22);
+}
+.actionbar .sum { font-size: 12px; color: var(--text-3); }
+.actionbar .sum b { color: var(--text); font-weight: 650; }
+.actionbar .sp { flex: 1; }
+
+/* ------------------------------------------------------------ tables */
+.ref-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ref-tbl th {
+  text-align: left; padding: 9px 12px; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--text-3); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.ref-tbl td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.ref-tbl tr:last-child td { border-bottom: none; }
+.ref-tbl tr:hover td { background: var(--surface-2); }
+.scroll { max-height: 420px; overflow-y: auto; border: 1px solid var(--line); border-radius: 11px; }
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 10px; border: 3px solid var(--surface); }
+
+.rules { display: flex; flex-direction: column; gap: 0; }
+.rule-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 12.5px; line-height: 1.5; }
+.rule-item:first-child { border-top: none; }
+.rule-item .n { font-family: var(--mono); font-size: 10.5px; color: var(--text-3); flex: 0 0 auto; padding-top: 2px; width: 18px; }
+.note { font-size: 12px; line-height: 1.55; color: var(--warn); background: var(--warn-bg);
+        border: 1px solid var(--warn-ln); border-radius: 10px; padding: 11px 13px; margin-top: 12px; }
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); }
+.search-wrap .inp { padding-left: 34px; }
+
+.hist-row td .when { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.empty { color: var(--text-3); font-size: 12.5px; padding: 26px 0; text-align: center; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px,1fr)); gap: 16px; align-items: start; }
+
+.toast {
+  position: fixed; bottom: 78px; right: 24px; z-index: 60;
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface-3); border: 1px solid var(--ok-ln); color: var(--ok);
+  padding: 10px 15px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  box-shadow: var(--shadow-2); opacity: 0; transform: translateY(8px);
+  pointer-events: none; transition: .2s;
+}
+.toast.show { opacity: 1; transform: none; }
+
+@media (max-width: 1080px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { position: static; height: auto; flex-direction: row; align-items: center; overflow-x: auto; }
+  .rail .brand { padding: 12px 16px; }
+  .rail .nav { flex-direction: row; padding: 8px; }
+  .rail .nav-label, .rail-foot, .nav .kbd { display: none; }
+  .split { grid-template-columns: 1fr; }
+  .sticky { position: static; }
+  .actionbar { left: 0; }
+  .live { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ==================================================== rail ===== -->
+  <aside class="rail">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-label="ILP Archive Namer">
+        <defs>
+          <linearGradient id="lgBadge" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e8ab77"/><stop offset=".55" stop-color="#d9825f"/>
+            <stop offset="1" stop-color="#c26545"/>
+          </linearGradient>
+          <linearGradient id="lgGloss" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <rect width="48" height="48" rx="12" fill="url(#lgBadge)"/>
+        <path d="M12 0h24a12 12 0 0 1 12 12v6H0v-6A12 12 0 0 1 12 0z" fill="url(#lgGloss)"/>
+        <path d="M10 20v-2.7c0-1.3 1.05-2.3 2.35-2.3h5.3c.8 0 1.55.38 2 1.03L21.4 20H10z" fill="#fff" fill-opacity=".55"/>
+        <rect x="10" y="18.6" width="28" height="16.4" rx="3" fill="#fff"/>
+        <path d="M21.7 23.1 29.3 26.8 21.7 30.5z" fill="#c05f3f" stroke="#c05f3f" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Archive Namer</h1>
+        <p>ILP · Isha Archives</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Workflow</div>
+      <button class="on" data-go="make">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Create a name <span class="kbd">1</span>
+      </button>
+      <button data-go="disk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Folder &amp; files <span class="kbd">2</span>
+      </button>
+      <button data-go="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Check a name <span class="kbd">3</span>
+      </button>
+
+      <div class="nav-label">Library</div>
+      <button data-go="ref">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V20a1 1 0 0 0 1 1h14"/></svg>
+        Reference <span class="kbd">4</span>
+      </button>
+      <button data-go="hist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        History <span class="kbd">5</span>
+      </button>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="stamp">v1.4.0<br>spec rev. 2024-11</div>
+    </div>
+  </aside>
+
+  <!-- ==================================================== main ===== -->
+  <div class="main">
+
+    <header class="top">
+      <div class="crumb" id="crumb">Create a name <span>· Dubbed YouTube video</span></div>
+
+      <div class="live" title="The name you are working on, always in reach">
+        <span class="dot"></span>
+        <code>SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021</code>
+        <button class="icon-btn" data-copy title="Copy folder name">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        </button>
+      </div>
+
+      <button class="icon-btn" id="themeBtn" title="Light / dark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8 8 0 0 1 10.5 4a8 8 0 1 0 9.5 9.5z"/></svg>
+      </button>
+    </header>
+
+    <!-- ============================================ screen: make ==== -->
+    <section class="screen on" id="s-make">
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hd">
+          <span class="chip">Step 1</span><h2>What are you archiving?</h2>
+          <span class="pill mute" style="margin-left:auto">8 categories</span>
+        </div>
+        <div class="card-sub">Pick the category from the spec. The form and the rules change with it.</div>
+
+        <div class="cat-grid">
+          <button class="cat on">
+            <div class="cat-top">
+              <span class="cat-ref">#1</span>
+              <span class="cat-name">Dubbed YouTube video</span>
+              <span class="cat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
+            </div>
+            <div class="cat-shape">CHNlng_code_Title_dd-Mmm-yyyy</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#2</span><span class="cat-name">Other Isha channel</span></div>
+            <div class="cat-shape">IECYThin_code_Title_date</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#3</span><span class="cat-name">Original is unlisted</span></div>
+            <div class="cat-shape">SGLYThin_made-date_Title_date</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#4</span><span class="cat-name">Department request</span></div>
+            <div class="cat-shape">IPC_Title_Tel_date</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#5</span><span class="cat-name">Sadhguru Exclusive</span></div>
+            <div class="cat-shape">SGEXhin0040_Series-Ep-Title</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#6</span><span class="cat-name">Instagram reel / post</span></div>
+            <div class="cat-shape">SGIGhin_code_Description_date</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">#7</span><span class="cat-name">Satsang video / audio</span></div>
+            <div class="cat-shape">Satsang-Mmm-yyyy_GM_Name_Lng</div>
+          </button>
+          <button class="cat">
+            <div class="cat-top"><span class="cat-ref">bkp</span><span class="cat-name">Department backup</span></div>
+            <div class="cat-shape">Department-Backup-ILP-Mmm-yyyy</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="split">
+        <!-- ------------------------------------------------ form -->
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <span class="chip">Step 2</span><h2>Details</h2>
+              <span class="pill ok" style="margin-left:auto">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                5 of 5 filled
+              </span>
+            </div>
+            <div class="card-sub">
+              Dubbed videos from the Sadhguru and Isha Foundation channels.
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Channel <span class="req">*</span></label>
+                <select class="inp">
+                  <option>SGYT — Sadhguru (YouTube)</option>
+                  <option>IFCYT — Isha Foundation (YouTube)</option>
+                </select>
+                <div class="hint">Writes the prefix <code>SGYT</code>.</div>
+              </div>
+              <div class="field">
+                <label>Language <span class="req">*</span></label>
+                <select class="inp">
+                  <option>hin — Hindi</option>
+                  <option>tam — Tamil</option>
+                  <option>tel — Telugu</option>
+                </select>
+                <div class="hint">3 lowercase letters, ISO 639-2/B.</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>
+                Video URL or ID <span class="req">*</span>
+                <span class="pill ok" style="margin-left:auto">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                  fetched
+                </span>
+              </label>
+              <div class="with-btn">
+                <input class="inp mono" value="https://youtube.com/watch?v=xVbcVQApKig">
+                <button class="btn">Look up</button>
+              </div>
+              <div class="hint">Code <code>xVbcVQApKig</code> · title pulled from the <b>English</b> URL, as the spec requires.</div>
+            </div>
+
+            <div class="field">
+              <label>Video title in English <span class="req">*</span></label>
+              <input class="inp" value="A Lesson From Guru Nanak">
+              <div class="hint">Trimmed from &ldquo;A Lesson From Guru Nanak | Sadhguru&rdquo; — edit freely.</div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Date translated video created <span class="req">*</span></label>
+                <input class="inp" type="date" value="2021-07-09">
+              </div>
+              <div class="field">
+                <label>Voice tracks</label>
+                <input class="inp" type="number" value="2">
+                <div class="hint">One WAV per voice. Mono, 24 bit, 48 kHz.</div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn">Clear</button>
+              <button class="btn">Load last used</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------------------------------------------- result -->
+        <div class="sticky">
+          <div class="card">
+            <div class="copybar">
+              <div class="eyebrow">Folder name</div>
+              <div class="sp"></div>
+              <button class="btn sm" data-copy>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                Copy
+              </button>
+            </div>
+
+            <div class="name-stage">
+              <div class="segs">
+                <div class="seg c1"><span class="tok" title="Channel code SGYT + language hin">SGYThin</span><span class="cap">channel + lang</span></div>
+                <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+                <div class="seg c2"><span class="tok" title="From the English YouTube URL">xVbcVQApKig</span><span class="cap">video code</span></div>
+                <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+                <div class="seg c3"><span class="tok" title="Title slug — every word capitalised, hyphen separated">A-Lesson-From-Guru-Nanak</span><span class="cap">title</span></div>
+                <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+                <div class="seg c4"><span class="tok" title="dd-Mmm-yyyy">09-Jul-2021</span><span class="cap">created</span></div>
+              </div>
+
+              <div class="verdict">
+                <span class="pill ok">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                  Spec compliant
+                </span>
+                <span>All 9 naming rules pass</span>
+                <span class="rule-dots" title="9 rules checked">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="issue info" style="margin-top:12px">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span>
+              <span>Not archived from this machine before. <b>No duplicate</b> in local history.</span>
+            </div>
+
+            <div class="eyebrow" style="margin:18px 0 8px">Archive to · Appendix 2</div>
+            <div class="nas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+              <span>\\ISHA-NAS\video-edit-tr-pub\Dubbed\Hindi\2021</span>
+              <button class="icon-btn" data-copy style="margin-left:auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="copybar">
+              <div class="eyebrow">What goes inside · 6 files</div>
+              <div class="sp"></div>
+              <div class="seg-ctl">
+                <button class="on" data-view="list">Grouped</button>
+                <button data-view="tree">Tree</button>
+              </div>
+            </div>
+
+            <div id="filesGrouped">
+              <div class="fgroup">
+                <div class="fgroup-hd">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  <span class="nm">Video Output</span>
+                  <span class="pill bad">mandatory</span>
+                  <span class="ct">2 files</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">Output_A-Lesson-From-Guru-Nanak_hin.mp4</div>
+                    <div class="fm">The published video. Must start with <b>Output</b> or Archives rejects it.</div>
+                  </div>
+                  <span class="pill bad">required</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">FB-Output_A-Lesson-From-Guru-Nanak_hin.mp4</div>
+                    <div class="fm">Only if a vertical subtitled version went to Facebook.</div>
+                  </div>
+                  <span class="pill mute">optional</span>
+                </div>
+              </div>
+
+              <div class="fgroup">
+                <div class="fgroup-hd">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  <span class="nm">Audio Output</span><span class="ct">2 files</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">Voice1_A-Lesson-From-Guru-Nanak_hin.wav</div>
+                    <div class="fm">Synced, de-breathed, otherwise unprocessed. Mono WAV 24 bit 48 kHz.</div>
+                  </div>
+                  <span class="pill mute">optional</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">Voice2_A-Lesson-From-Guru-Nanak_hin.wav</div>
+                    <div class="fm">Second voice track.</div>
+                  </div>
+                  <span class="pill mute">optional</span>
+                </div>
+              </div>
+
+              <div class="fgroup">
+                <div class="fgroup-hd">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  <span class="nm">SRT_Transcript</span><span class="ct">2 files</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">Script_A-Lesson-From-Guru-Nanak_hin.docx</div>
+                    <div class="fm">Bilingual docx with the final translation.</div>
+                  </div>
+                  <span class="pill mute">optional</span>
+                </div>
+                <div class="frow">
+                  <div class="fmain">
+                    <div class="fn">Subtitles_A-Lesson-From-Guru-Nanak_hin.srt</div>
+                    <div class="fm">Only if an SRT adjusted to your language exists.</div>
+                  </div>
+                  <span class="pill mute">optional</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="filesTree" style="display:none">
+              <div class="name-stage tree">
+<span class="folder">SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021/</span>
+├─ <span class="folder">Video Output/</span>          <span class="dim">mandatory</span>
+│  ├─ <span class="file">Output_A-Lesson-From-Guru-Nanak_hin.mp4</span>
+│  └─ <span class="file">FB-Output_A-Lesson-From-Guru-Nanak_hin.mp4</span>
+├─ <span class="folder">Audio Output/</span>
+│  ├─ <span class="file">Voice1_A-Lesson-From-Guru-Nanak_hin.wav</span>
+│  └─ <span class="file">Voice2_A-Lesson-From-Guru-Nanak_hin.wav</span>
+├─ <span class="folder">SRT_Transcript/</span>
+│  ├─ <span class="file">Script_A-Lesson-From-Guru-Nanak_hin.docx</span>
+│  └─ <span class="file">Subtitles_A-Lesson-From-Guru-Nanak_hin.srt</span>
+├─ <span class="folder">Audio Project/</span>        <span class="dim">DAW sessions</span>
+├─ <span class="folder">Video Project/</span>        <span class="dim">editor project</span>
+├─ <span class="folder">Common files/</span>
+└─ <span class="folder">Fonts/</span>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn" data-copy>Copy all filenames</button>
+              <button class="btn" data-copy>Copy tree</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <div class="sum">Ready · <b>1 folder</b>, 7 subfolders, 6 filenames</div>
+        <div class="sp"></div>
+        <button class="btn" data-copy>Copy name</button>
+        <button class="btn primary" data-go="disk">
+          Create on disk
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================ screen: disk ==== -->
+    <section class="screen" id="s-disk">
+
+      <div class="steps">
+        <div class="step done">
+          <span class="num"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
+          <div><div class="ttl">Name generated</div><div class="sub">Category #1 · Hindi</div></div>
+        </div>
+        <div class="step done">
+          <span class="num"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
+          <div><div class="ttl">Folders created</div><div class="sub">7 subfolders on Z:</div></div>
+        </div>
+        <div class="step now">
+          <span class="num">3</span>
+          <div><div class="ttl">Add your files</div><div class="sub">4 matched, 1 needs a role</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="copybar">
+          <div class="eyebrow">Archiving into</div>
+          <div class="sp"></div>
+          <span class="pill ok">folders exist</span>
+        </div>
+        <div class="name-stage" style="padding:13px 14px">
+          <div style="font-family:var(--mono);font-size:12.5px;line-height:1.7">
+            <span style="color:var(--text-3)">Z:\ILP NAS Drive\video-edit-tr-pub\Dubbed\Hindi\2021\</span><br>
+            <span style="color:var(--accent)">SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="chip">Source</span><h2>Where are your finished files?</h2>
+        </div>
+        <div class="card-sub">Each file&rsquo;s role is guessed from its name. Every guess is a dropdown you can correct.</div>
+
+        <div class="with-btn">
+          <input class="inp mono" value="C:\Users\ilp\Desktop\Guru Nanak final">
+          <button class="btn">Browse&hellip;</button>
+          <button class="btn">Rescan</button>
+        </div>
+
+        <div class="plan" style="margin-top:16px">
+          <div class="plan-hd">
+            <span class="map-head">5 files found</span>
+            <div class="sp"></div>
+            <span class="pill ok">4 matched</span>
+            <span class="pill warn">1 unassigned</span>
+          </div>
+
+          <div class="map-row" style="background:var(--surface-2)">
+            <span class="map-head">Your file</span>
+            <span class="map-head">Role</span>
+            <span class="map-head">Archived as</span>
+            <span class="map-head">Status</span>
+          </div>
+
+          <div class="map-row">
+            <span class="map-src">render final FB vertical.mp4</span>
+            <select class="inp"><option>Facebook MP4</option><option>Output MP4</option><option>Ignore</option></select>
+            <span class="map-dst"><span class="path">Video Output/</span>FB-Output_A-Lesson-From-Guru-Nanak_hin.mp4</span>
+            <span class="pill ok">rename</span>
+          </div>
+          <div class="map-row">
+            <span class="map-src">GuruNanak_master_v3.mp4</span>
+            <select class="inp"><option>Output MP4</option><option>Facebook MP4</option><option>Ignore</option></select>
+            <span class="map-dst"><span class="path">Video Output/</span>Output_A-Lesson-From-Guru-Nanak_hin.mp4</span>
+            <span class="pill ok">rename</span>
+          </div>
+          <div class="map-row">
+            <span class="map-src">Voice2 take.wav</span>
+            <select class="inp"><option>Voice 2</option><option>Voice 1</option><option>Ignore</option></select>
+            <span class="map-dst"><span class="path">Audio Output/</span>Voice2_A-Lesson-From-Guru-Nanak_hin.wav</span>
+            <span class="pill ok">rename</span>
+          </div>
+          <div class="map-row">
+            <span class="map-src">subs hindi.srt</span>
+            <select class="inp"><option>Subtitles</option><option>Script</option><option>Ignore</option></select>
+            <span class="map-dst"><span class="path">SRT_Transcript/</span>Subtitles_A-Lesson-From-Guru-Nanak_hin.srt</span>
+            <span class="pill warn">exists</span>
+          </div>
+          <div class="map-row">
+            <span class="map-src">notes.txt</span>
+            <select class="inp"><option>— pick a role —</option><option>Script</option><option>Ignore</option></select>
+            <span class="map-dst" style="color:var(--text-3)">not archived</span>
+            <span class="pill mute">skipped</span>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          <span><b>No Output*.mp4 conflict, but one file already exists.</b> <code>Subtitles_…_hin.srt</code> is already in the archive — with <i>Skip</i> selected the archived copy is left untouched.</span>
+        </div>
+
+        <div class="row2" style="margin-top:16px">
+          <div class="field" style="margin:0">
+            <label>How to transfer</label>
+            <div class="seg-ctl" style="width:100%">
+              <button class="on" style="flex:1">Copy · originals stay</button>
+              <button class="warn" style="flex:1">Move · removes original</button>
+            </div>
+            <div class="hint">Move is copy &rarr; verify byte-identical &rarr; remove. Never a bare move.</div>
+          </div>
+          <div class="field" style="margin:0">
+            <label>If a file is already there</label>
+            <select class="inp">
+              <option>Skip it, leave the archived one alone</option>
+              <option>Keep both (add -2 to the new one)</option>
+              <option>Replace the archived file</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <div class="sum"><b>4 files</b> · 3 renamed, 1 skipped · 1.8 GB copied, nothing deleted</div>
+        <div class="sp"></div>
+        <button class="btn">Dry run</button>
+        <button class="btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg>
+          Add files
+        </button>
+      </div>
+    </section>
+
+    <!-- =========================================== screen: check ==== -->
+    <section class="screen" id="s-check">
+      <div class="split">
+        <div class="card">
+          <div class="card-hd"><h2>Check a name that already exists</h2></div>
+          <div class="card-sub">Paste a folder name from the NAS. The tool works out which category it belongs to and flags anything Archives would reject.</div>
+          <div class="field">
+            <label>Existing folder name</label>
+            <input class="inp mono" value="SGYThin_xVbcVQApKig_a lesson from guru nanak_9-July-2021">
+          </div>
+          <div class="btn-row">
+            <button class="btn primary">Check</button>
+            <button class="btn">Paste from clipboard</button>
+          </div>
+          <div class="hint" style="margin-top:14px">Checking many at once? Drop a folder listing here — coming in the bulk audit.</div>
+        </div>
+
+        <div class="card">
+          <div class="copybar">
+            <div class="eyebrow">Result</div>
+            <div class="sp"></div>
+            <span class="pill bad">2 rules broken</span>
+          </div>
+
+          <div class="name-stage">
+            <div class="segs">
+              <div class="seg c1"><span class="tok">SGYThin</span><span class="cap">channel + lang</span></div>
+              <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+              <div class="seg c2"><span class="tok">xVbcVQApKig</span><span class="cap">video code</span></div>
+              <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+              <div class="seg bad"><span class="tok">a lesson from guru nanak</span><span class="cap"><b>title</b></span></div>
+              <div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>
+              <div class="seg bad"><span class="tok">9-July-2021</span><span class="cap"><b>date</b></span></div>
+            </div>
+            <div class="verdict">
+              <span class="pill info">Reads as category #1</span>
+              <span>7 of 9 rules pass</span>
+              <span class="rule-dots">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="issue bad">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></span>
+            <span><b>Title contains spaces</b> and is not capitalised. Words must be hyphen separated, every word capitalised.</span>
+            <span class="rule">rule 2 · 4</span>
+          </div>
+          <div class="issue bad">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></span>
+            <span><b>Date is not dd-Mmm-yyyy.</b> Day must be two digits and the month a three-letter abbreviation.</span>
+            <span class="rule">rule 6</span>
+          </div>
+
+          <div class="eyebrow" style="margin:18px 0 8px">Suggested correction</div>
+          <div class="nas" style="color:var(--ok);background:var(--ok-bg);border-color:var(--ok-ln)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            <span>SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021</span>
+            <button class="icon-btn" data-copy style="margin-left:auto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            </button>
+          </div>
+          <div class="hint">The fix is generated by the same engine that builds new names, so it is guaranteed to pass.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================= screen: ref ==== -->
+    <section class="screen" id="s-ref">
+      <div class="card" style="margin-bottom:16px">
+        <div class="search-wrap" style="margin:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="inp" placeholder="Search everything — channels, departments, languages, NAS paths, rules…">
+        </div>
+        <div class="hint">One box instead of three. <span class="kbd">Ctrl</span> <span class="kbd">K</span> from anywhere.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><h2>Channel codes</h2><span class="pill mute" style="margin-left:auto">Appendix 1</span></div>
+          <div class="card-sub">The <b>folder prefix</b> column is what this tool actually writes.</div>
+          <div class="scroll">
+            <table class="ref-tbl">
+              <thead><tr><th>Code</th><th>Folder prefix</th><th>Channel</th><th>Platform</th></tr></thead>
+              <tbody>
+                <tr><td><code>SGYT</code></td><td><code>SGYThin</code></td><td>Sadhguru</td><td>YouTube</td></tr>
+                <tr><td><code>IFCYT</code></td><td><code>IFCYThin</code></td><td>Isha Foundation</td><td>YouTube</td></tr>
+                <tr><td><code>IEC</code></td><td><code>IECYThin</code></td><td>Inner Engineering</td><td>YouTube</td></tr>
+                <tr><td><code>IUC</code></td><td><code>IUCYThin</code></td><td>Isha USA</td><td>YouTube</td></tr>
+                <tr><td><code>SOI</code></td><td><code>SOIYThin</code></td><td>Sounds of Isha</td><td>YouTube</td></tr>
+                <tr><td><code>SGIG</code></td><td><code>SGIGhin</code></td><td>Sadhguru</td><td>Instagram</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            Several Appendix 1 codes already contain the platform token (<code>SGYT</code>), others do not (<code>IEC</code>). This column reproduces both of the spec&rsquo;s own examples. <b>Confirm with Archives</b> for the channels with no published example.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>The nine naming rules</h2></div>
+          <div class="card-sub">Every rule the checker enforces, in the order it reports them.</div>
+          <div class="rules">
+            <div class="rule-item"><span class="n">1</span><span>Only <code>-</code> and <code>_</code> as separators.</span></div>
+            <div class="rule-item"><span class="n">2</span><span>No spaces anywhere in a folder or file name.</span></div>
+            <div class="rule-item"><span class="n">3</span><span>No special characters: <code>, . % ' ( )</code></span></div>
+            <div class="rule-item"><span class="n">4</span><span>Every letter after a hyphen or underscore is capital.</span></div>
+            <div class="rule-item"><span class="n">5</span><span>Language code is exactly 3 lowercase letters — except #4 and #7, which capitalise it (<code>Tel</code>).</span></div>
+            <div class="rule-item"><span class="n">6</span><span>Dates are <code>dd-Mmm-yyyy</code>, e.g. <code>09-Jul-2021</code>.</span></div>
+            <div class="rule-item"><span class="n">7</span><span>The video code comes from the <b>English</b> URL, never the regional one.</span></div>
+            <div class="rule-item"><span class="n">8</span><span><code>Video Output</code> is mandatory inside the main folder.</span></div>
+            <div class="rule-item"><span class="n">9</span><span>The published MP4 starts with <code>Output</code>. Never <code>IG_Output</code>.</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>NAS destinations</h2><span class="pill mute" style="margin-left:auto">Appendix 2</span></div>
+          <div class="scroll" style="max-height:260px">
+            <table class="ref-tbl">
+              <thead><tr><th>Content</th><th>Path</th></tr></thead>
+              <tbody>
+                <tr><td>Dubbed YouTube</td><td><code>\\ISHA-NAS\video-edit-tr-pub\Dubbed</code></td></tr>
+                <tr><td>Satsang</td><td><code>\\ISHA-NAS\video-edit-tr-pub\Satsang</code></td></tr>
+                <tr><td>Instagram</td><td><code>\\ISHA-NAS\video-edit-tr-pub\Social</code></td></tr>
+                <tr><td>Department backup</td><td><code>\\ISHA-NAS\dept-backup</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>Indian language codes</h2><span class="pill mute" style="margin-left:auto">ISO 639-2/B</span></div>
+          <div class="scroll" style="max-height:260px">
+            <table class="ref-tbl">
+              <thead><tr><th>Code</th><th>Language</th><th>Group</th></tr></thead>
+              <tbody>
+                <tr><td><code>hin</code></td><td>Hindi</td><td>Scheduled</td></tr>
+                <tr><td><code>tam</code></td><td>Tamil</td><td>Scheduled</td></tr>
+                <tr><td><code>tel</code></td><td>Telugu</td><td>Scheduled</td></tr>
+                <tr><td><code>kan</code></td><td>Kannada</td><td>Scheduled</td></tr>
+                <tr><td><code>brx</code></td><td>Bodo</td><td>639-3 fallback</td></tr>
+                <tr><td><code>eng</code></td><td>English</td><td>Source</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ screen: hist ==== -->
+    <section class="screen" id="s-hist">
+      <div class="card">
+        <div class="card-hd">
+          <h2>What this machine has archived</h2>
+          <span class="pill mute" style="margin-left:auto">%LOCALAPPDATA%\ILP-Archive-Namer\history.jsonl</span>
+        </div>
+        <div class="card-sub">Every scaffold and ingest run from this machine. A name you already archived is flagged before you write it again.</div>
+
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="inp" placeholder="Filter by folder name, category or date…">
+        </div>
+
+        <div class="scroll" style="max-height:none">
+          <table class="ref-tbl">
+            <thead><tr><th>When</th><th>Action</th><th>Folder</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr class="hist-row"><td class="when">19 Sep 14:22</td><td><span class="pill info">ingest</span></td>
+                <td><code>SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021</code></td>
+                <td><span class="pill ok">4 files copied</span></td></tr>
+              <tr class="hist-row"><td class="when">19 Sep 14:19</td><td><span class="pill mute">scaffold</span></td>
+                <td><code>SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021</code></td>
+                <td><span class="pill ok">7 folders</span></td></tr>
+              <tr class="hist-row"><td class="when">18 Sep 11:04</td><td><span class="pill info">ingest</span></td>
+                <td><code>IPC_How-To-Meditate_Tel_03-Oct-2022</code></td>
+                <td><span class="pill warn">1 skipped, exists</span></td></tr>
+              <tr class="hist-row"><td class="when">17 Sep 16:47</td><td><span class="pill mute">scaffold</span></td>
+                <td><code>Satsang-Jun-2022-Audio_GM_Chitshakti_Meditation-Peace_Tel</code></td>
+                <td><span class="pill ok">7 folders</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn">Refresh</button>
+          <button class="btn">Export CSV</button>
+          <button class="btn danger">Clear history</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+  <span>Copied to clipboard</span>
+</div>
+
+<script>
+/* Mockup wiring only — enough interaction to judge the design.
+   No engine, no server calls. */
+const CRUMBS = {
+  make:  'Create a name <span>· Dubbed YouTube video</span>',
+  disk:  'Folder &amp; files <span>· step 3 of 3</span>',
+  check: 'Check a name <span>· paste from the NAS</span>',
+  ref:   'Reference <span>· spec appendices</span>',
+  hist:  'History <span>· this machine</span>'
+};
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's' + '-' + id));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.go === id));
+  document.getElementById('crumb').innerHTML = CRUMBS[id];
+  window.scrollTo({ top: 0 });
+}
+
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+
+document.querySelectorAll('.cat').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('.cat').forEach(x => x.classList.remove('on'));
+  c.classList.add('on');
+}));
+
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-view]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  const tree = b.dataset.view === 'tree';
+  document.getElementById('filesTree').style.display = tree ? 'block' : 'none';
+  document.getElementById('filesGrouped').style.display = tree ? 'none' : 'block';
+}));
+
+document.querySelectorAll('.seg-ctl button:not([data-view])').forEach(b => b.addEventListener('click', () => {
+  b.parentElement.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+}));
+
+const toast = document.getElementById('toast');
+let toastTimer = null;
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+}));
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const el = document.documentElement;
+  el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+
+const KEYS = { '1': 'make', '2': 'disk', '3': 'check', '4': 'ref', '5': 'hist' };
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, select, textarea')) return;
+  if (KEYS[e.key]) go(KEYS[e.key]);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILP Archive Namer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23e8ab77%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23d9825f%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c26545%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2248%22%20height%3D%2248%22%20rx%3D%2212%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Cpath%20d%3D%22M10%2020v-2.7c0-1.3%201.05-2.3%202.35-2.3h5.3c.8%200%201.55.38%202%201.03L21.4%2020H10z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.55%22%2F%3E%3Crect%20x%3D%2210%22%20y%3D%2218.6%22%20width%3D%2228%22%20height%3D%2216.4%22%20rx%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M21.7%2023.1%2029.3%2026.8%2021.7%2030.5z%22%20fill%3D%22%23c05f3f%22%20stroke%3D%22%23c05f3f%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===================================================== rail ===== -->
+  <aside class="rail">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" role="img" aria-label="ILP Archive Namer">
+        <defs>
+          <linearGradient id="lgBadge" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e8ab77"/>
+            <stop offset=".55" stop-color="#d9825f"/>
+            <stop offset="1" stop-color="#c26545"/>
+          </linearGradient>
+          <linearGradient id="lgGloss" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="lgFolder" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".97"/>
+            <stop offset="1" stop-color="#fff" stop-opacity=".86"/>
+          </linearGradient>
+        </defs>
+        <rect width="48" height="48" rx="12" fill="url(#lgBadge)"/>
+        <path d="M12 0h24a12 12 0 0 1 12 12v6H0v-6A12 12 0 0 1 12 0z" fill="url(#lgGloss)"/>
+        <rect x=".75" y=".75" width="46.5" height="46.5" rx="11.25"
+              fill="none" stroke="#fff" stroke-opacity=".24"/>
+        <path d="M10 20v-2.7c0-1.3 1.05-2.3 2.35-2.3h5.3c.8 0 1.55.38 2 1.03L21.4 20H10z"
+              fill="#fff" fill-opacity=".55"/>
+        <rect x="10" y="18.6" width="28" height="16.4" rx="3" fill="url(#lgFolder)"/>
+        <path d="M21.7 23.1 29.3 26.8 21.7 30.5z" fill="#c05f3f"
+              stroke="#c05f3f" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Archive Namer</h1>
+        <p>ILP &middot; Isha Archives</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Workflow</div>
+      <button class="on" data-go="make">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Create a name <span class="kbd">1</span>
+      </button>
+      <button data-go="disk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Folder &amp; files <span class="kbd">2</span>
+      </button>
+      <button data-go="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Check a name <span class="kbd">3</span>
+      </button>
+
+      <div class="nav-label">Library</div>
+      <button data-go="ref">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V20a1 1 0 0 0 1 1h14"/></svg>
+        Reference <span class="kbd">4</span>
+      </button>
+      <button data-go="hist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        History <span class="kbd">5</span>
+      </button>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="stamp" id="stamp"></div>
+    </div>
+  </aside>
+
+  <!-- ===================================================== main ===== -->
+  <div class="main">
+
+    <header class="top">
+      <div class="crumb" id="crumb">Create a name</div>
+
+      <div class="live empty" id="liveBar" title="The name you are working on">
+        <span class="dot"></span>
+        <code id="liveName">No name yet</code>
+        <button class="icon-btn" id="liveCopy" title="Copy folder name">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        </button>
+      </div>
+
+      <button class="icon-btn" id="themeBtn" title="Light / dark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8 8 0 0 1 10.5 4a8 8 0 1 0 9.5 9.5z"/></svg>
+      </button>
+    </header>
+
+    <!-- ============================================ CREATE A NAME ==== -->
+    <section class="screen on" id="s-make">
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hd">
+          <span class="chip">Step 1</span>
+          <span>What are you archiving?</span>
+        </div>
+        <div class="card-sub">
+          Pick the category from the spec. The form and the rules change with it.
+        </div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-hd">
+              <span class="chip">Step 2</span>
+              <span id="catLabel">&mdash;</span>
+              <span class="badge" id="catBadge">#1</span>
+            </div>
+            <div class="card-sub" id="catBlurb"></div>
+            <div id="form"></div>
+            <div class="btn-row">
+              <button class="ghost" id="btnReset">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-col">
+          <div class="card">
+            <div class="copybar">
+              <div class="section-title">Folder name</div>
+              <div class="spacer"></div>
+              <button class="copy" id="btnCopyFolder">Copy</button>
+            </div>
+
+            <div class="name-stage" id="nameStage">
+              <div class="segs" id="outSegments"></div>
+              <div class="result-name" id="outFolder"
+                   style="display:none">Fill in the fields to generate a name</div>
+              <div class="verdict" id="outVerdict" style="display:none"></div>
+            </div>
+
+            <div id="outIssues"></div>
+
+            <div id="nasWrap" style="display:none; margin-top:18px;">
+              <div class="section-title">Archive to &middot; Appendix 2</div>
+              <div class="nas" id="outNas"></div>
+            </div>
+          </div>
+
+          <div class="card" id="filesCard" style="display:none;">
+            <div class="copybar">
+              <div class="section-title" id="filesTitle">What goes inside</div>
+              <div class="spacer"></div>
+              <div class="seg-ctl">
+                <button class="on" data-view="grouped">Grouped</button>
+                <button data-view="tree">Tree</button>
+              </div>
+            </div>
+
+            <div id="outFiles"></div>
+            <div class="tree" id="outTree" style="display:none"></div>
+
+            <div class="btn-row">
+              <button class="ghost" id="btnCopyAll">Copy all filenames</button>
+              <button class="ghost" id="btnCopyTree">Copy tree</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <div class="sum" id="makeSummary">Fill in the fields to generate a name</div>
+        <div class="spacer"></div>
+        <button class="ghost" id="btnCopyFolder2">Copy name</button>
+        <button class="primary" id="btnGoDisk" data-go="disk" disabled>
+          Create on disk
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================= FOLDER &amp; FILES ==== -->
+    <section class="screen" id="s-disk">
+
+      <div class="card" id="diskNoName" style="display:none;">
+        <div class="card-hd">No name generated yet</div>
+        <div class="card-sub" style="margin-bottom:0">
+          Go to <strong>Create a name</strong> first, fill in the details until
+          the folder name appears, then come back here.
+        </div>
+      </div>
+
+      <div id="diskWork">
+        <div class="steps">
+          <div class="step done" id="stepName">
+            <span class="num">1</span>
+            <div><div class="ttl">Name generated</div><div class="sub" id="stepNameSub">&mdash;</div></div>
+          </div>
+          <div class="step now" id="stepFolders">
+            <span class="num">2</span>
+            <div><div class="ttl">Create the folders</div><div class="sub" id="stepFoldersSub">Not created yet</div></div>
+          </div>
+          <div class="step" id="stepFiles">
+            <span class="num">3</span>
+            <div><div class="ttl">Add your files</div><div class="sub" id="stepFilesSub">Waiting for the folders</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="copybar">
+            <div class="section-title">Archiving</div>
+            <div class="spacer"></div>
+            <span class="badge" id="diskMeta"></span>
+          </div>
+          <div class="result-name" id="diskFolder">&mdash;</div>
+          <div id="diskSeen"></div>
+        </div>
+
+        <!-- ------------- step 1: scaffold ------------- -->
+        <div class="card">
+          <div class="card-hd"><span class="chip">Step 2</span> Create the folders</div>
+          <div class="card-sub" id="diskNasHint"></div>
+
+          <div class="field">
+            <label>Destination folder <span class="req">*</span></label>
+            <div class="row">
+              <input type="text" id="destRoot" class="mono"
+                     placeholder="e.g. Z:\ILP NAS Drive\video-edit-tr-pub">
+              <button class="ghost" id="btnBrowseDest" style="flex:0 0 auto">Browse&hellip;</button>
+            </div>
+            <div class="hint">
+              The archive folder is created <em>inside</em> this folder. Map your
+              NAS to a drive letter first, or paste a UNC path.
+            </div>
+          </div>
+
+          <div class="checkline">
+            <input type="checkbox" id="mandatoryOnly">
+            <label for="mandatoryOnly">
+              Only create the mandatory <code>Video Output</code> subfolder
+            </label>
+          </div>
+
+          <div class="btn-row">
+            <button class="ghost" id="btnScaffoldPlan">Preview</button>
+            <button class="primary" id="btnScaffoldApply">Create folders</button>
+          </div>
+
+          <div id="scaffoldOut"></div>
+        </div>
+
+        <!-- ------------- step 2: ingest ------------- -->
+        <div class="card" id="ingestCard">
+          <div class="card-hd"><span class="chip">Step 3</span> Add your files</div>
+          <div class="card-sub">
+            Point at the folder holding your finished files. Each one is renamed
+            to spec and filed into the right subfolder. Nothing is overwritten
+            and nothing is deleted.
+          </div>
+
+          <div class="field">
+            <label>Source folder <span class="req">*</span></label>
+            <div class="row">
+              <input type="text" id="srcRoot" class="mono"
+                     placeholder="Folder with your wav / docx / srt / mp4 files">
+              <button class="ghost" id="btnBrowseSrc" style="flex:0 0 auto">Browse&hellip;</button>
+              <button class="ghost" id="btnScan" style="flex:0 0 auto">Scan</button>
+            </div>
+          </div>
+
+          <div id="scanOut"></div>
+
+          <div id="ingestControls" style="display:none;">
+            <div class="row2" style="margin-top:16px;">
+              <div class="field" style="margin-bottom:0">
+                <label>How to transfer</label>
+                <select id="ingestMode">
+                  <option value="copy">Copy (leaves your originals in place)</option>
+                  <option value="move">Move (removes the original after copying)</option>
+                </select>
+                <div class="hint">
+                  Move is copy &rarr; verify byte-identical &rarr; remove. Never a bare move.
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>If a file is already there</label>
+                <select id="onConflict">
+                  <option value="skip">Skip it, leave the archived one alone</option>
+                  <option value="keep-both">Keep both (add -2 to the new one)</option>
+                  <option value="replace">Replace the archived file</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="checkline" id="moveConfirmRow" style="display:none;">
+              <input type="checkbox" id="confirmMove">
+              <label for="confirmMove" style="color:var(--warn)">
+                I understand the source files will be removed after they are
+                copied and verified
+              </label>
+            </div>
+
+            <div class="btn-row">
+              <button class="ghost" id="btnIngestPlan">Dry run</button>
+              <button class="primary" id="btnIngestApply">Add files</button>
+            </div>
+          </div>
+
+          <div id="ingestOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================== CHECK A NAME ===== -->
+    <section class="screen" id="s-check">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-hd">Check a name that already exists</div>
+          <div class="card-sub">
+            Paste a folder name from the NAS. The tool works out which category
+            it belongs to and flags anything Archives would reject.
+          </div>
+          <div class="field">
+            <label>Existing folder name</label>
+            <input type="text" id="checkInput" class="mono"
+                   placeholder="SGYThin_xVbcVQApKig_A-Lesson-From-Guru-Nanak_09-Jul-2021">
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="btnCheck">Check</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="copybar">
+            <div class="section-title">Result</div>
+            <div class="spacer"></div>
+            <span id="checkVerdictPill"></span>
+          </div>
+          <div id="checkResult" class="empty">Nothing checked yet.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== REFERENCE ===== -->
+    <section class="screen" id="s-ref">
+      <div class="card" style="margin-bottom:16px">
+        <div class="search-wrap" style="margin:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="refSearch"
+                 placeholder="Search channels, departments, languages and NAS paths...">
+        </div>
+        <div class="hint" id="refCount">One box for every table below.</div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <div class="card-hd">Channel codes <span class="pill mute" style="margin-left:auto">Appendix 1</span></div>
+            <div class="card-sub">
+              The <strong>folder prefix</strong> column is what this tool actually writes.
+            </div>
+            <div class="scroll-y">
+              <table class="ref">
+                <thead><tr><th>Code</th><th>Folder prefix</th><th>Channel</th><th>Platform</th></tr></thead>
+                <tbody id="chBody"></tbody>
+              </table>
+            </div>
+            <div class="note">
+              The spec describes the prefix as &ldquo;3-digit channel code + 2-digit
+              platform&rdquo;, but several Appendix&nbsp;1 codes already contain the
+              platform token (SGYT, IFCYT) while others do not (IEC, IUC). The
+              <strong>Folder prefix</strong> column reproduces both of the
+              spec&rsquo;s own examples (SGYT&rarr;<code>SGYThin</code>,
+              IEC&rarr;<code>IECYThin</code>).
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">NAS destinations <span class="pill mute" style="margin-left:auto">Appendix 2</span></div>
+            <div class="scroll-y" style="max-height:300px">
+              <table class="ref">
+                <thead><tr><th>Content</th><th>Path</th></tr></thead>
+                <tbody id="nasBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hd">Department / content codes</div>
+            <div class="card-sub">Used for category #4 and for department backups.</div>
+            <div class="scroll-y" style="max-height:300px">
+              <table class="ref">
+                <thead><tr><th>Code</th><th>Department</th></tr></thead>
+                <tbody id="deptBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">Indian language codes <span class="pill mute" style="margin-left:auto">ISO 639-2/B</span></div>
+            <div class="card-sub">
+              The 22 scheduled languages first, then other regional languages,
+              then English as the source language.
+            </div>
+            <div class="scroll-y" style="max-height:300px">
+              <table class="ref">
+                <thead><tr><th>Code</th><th>Language</th><th>Group</th></tr></thead>
+                <tbody id="langBody"></tbody>
+              </table>
+            </div>
+            <div class="hint" style="margin-top:10px;">
+              Twelve regional languages have no ISO 639-2 code, so their ISO
+              639-3 code is used (<code>brx</code>, <code>hne</code>,
+              <code>tcy</code>, <code>grt</code>, <code>kfy</code>,
+              <code>gbm</code>, <code>bgc</code>, <code>bhb</code>,
+              <code>kfa</code>, <code>kru</code>, <code>lbj</code>,
+              <code>mwr</code>). Reference:
+              <a href="https://www.loc.gov/standards/iso639-2/php/code_list.php"
+                 target="_blank" rel="noopener">loc.gov/standards/iso639-2</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">The naming rules</div>
+            <div class="card-sub">Every rule the checker enforces.</div>
+            <div class="rules">
+              <div class="rule-item"><span class="n">1</span><span>Only hyphens <code>-</code> and underscores <code>_</code> are allowed as separators.</span></div>
+              <div class="rule-item"><span class="n">2</span><span>No spaces anywhere in a folder or file name.</span></div>
+              <div class="rule-item"><span class="n">3</span><span>No special characters: <code>, . % ' ( )</code></span></div>
+              <div class="rule-item"><span class="n">4</span><span>Every letter after a hyphen or underscore is capital.</span></div>
+              <div class="rule-item"><span class="n">5</span><span>Language code is exactly 3 lowercase letters &mdash; except categories #4 and #7, which capitalise it (<code>Tel</code>).</span></div>
+              <div class="rule-item"><span class="n">6</span><span>Dates are <code>dd-Mmm-yyyy</code>, e.g. <code>09-Jul-2021</code>.</span></div>
+              <div class="rule-item"><span class="n">7</span><span>The video code comes from the <strong>English</strong> URL, never the regional one.</span></div>
+              <div class="rule-item"><span class="n">8</span><span>The <code>Video Output</code> folder is mandatory inside the main folder.</span></div>
+              <div class="rule-item"><span class="n">9</span><span>The published MP4 must start with <code>Output</code>. Never <code>IG_Output</code> &mdash; Archives rejects it.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= HISTORY ===== -->
+    <section class="screen" id="s-hist">
+      <div class="card">
+        <div class="card-hd">What this machine has archived</div>
+        <div class="card-sub" id="histPath"></div>
+
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="histSearch" placeholder="Filter by folder name, action or date...">
+        </div>
+
+        <div class="scroll-y" style="max-height:none">
+          <table class="ref">
+            <thead><tr><th>When</th><th>Action</th><th>Folder</th><th>Result</th></tr></thead>
+            <tbody id="histBody"></tbody>
+          </table>
+        </div>
+        <div id="histEmpty" class="empty" style="display:none;">
+          Nothing archived from this machine yet.
+        </div>
+
+        <div class="btn-row">
+          <button class="ghost" id="btnHistRefresh">Refresh</button>
+          <button class="ghost danger" id="btnHistClear">Clear history</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+       stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+  <span id="toastText">Copied</span>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

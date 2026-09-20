@@ -1,0 +1,21 @@
+{
+  "_source": "How to archive ILP content.docx - Appendix 1: Channel codes",
+  "_note": "prefix_literal is the exact string that begins the folder name, BEFORE the language code. The spec text says '3-digit channel code + 2-digit platform', but several Appendix-1 codes (SGYT, IFCYT) already contain the platform token while others (IEC, IUC) do not. prefix_literal removes that ambiguity: it is always the final answer.",
+  "channels": [
+    { "code": "SGYT",  "prefix_literal": "SGYT",  "name": "Sadhguru YT Channel",        "platform": "YT", "url": "https://www.youtube.com/user/sadhguru",                      "category": "dubbed_yt" },
+    { "code": "SGTA",  "prefix_literal": "SGTA",  "name": "Sadhguru Tamil Channel",     "platform": "YT", "url": "https://www.youtube.com/@SadhguruTamil",                     "category": "dubbed_yt" },
+    { "code": "IFCYT", "prefix_literal": "IFCYT", "name": "Isha Foundation YT Channel", "platform": "YT", "url": "https://www.youtube.com/user/ishafoundation",                "category": "dubbed_yt" },
+    { "code": "IEC",   "prefix_literal": "IECYT", "name": "Inner Engineering",          "platform": "YT", "url": "https://www.youtube.com/user/IshaInnerEngineering",          "category": "other_channel_yt" },
+    { "code": "IUC",   "prefix_literal": "IUCYT", "name": "Isha USA YT channel",        "platform": "YT", "url": "https://www.youtube.com/channel/UC0_PjDd7_yRKJfUFR-Dgw7w",   "category": "other_channel_yt" },
+    { "code": "SGL",   "prefix_literal": "SGLYT", "name": "Unlisted videos on SGC",     "platform": "YT", "url": null,                                                        "category": "unlisted_yt" },
+    { "code": "IFV",   "prefix_literal": "IFVYT", "name": "IshaFoundationVideo",        "platform": "YT", "url": "https://www.youtube.com/channel/UCuJBybFoZA84_PEBOcc_xYg",   "category": "other_channel_yt" },
+    { "code": "SOI",   "prefix_literal": "SOIYT", "name": "Sounds of Isha",             "platform": "YT", "url": "https://www.youtube.com/user/soundsofisha",                  "category": "other_channel_yt" },
+    { "code": "SGIG",  "prefix_literal": "SGIG",  "name": "Sadhguru Instagram",         "platform": "IG", "url": "https://www.instagram.com/sadhguru/",                        "category": "instagram" },
+    { "code": "IFIG",  "prefix_literal": "IFIG",  "name": "Isha Foundation Instagram",  "platform": "IG", "url": "https://www.instagram.com/ishafoundation/",                  "category": "instagram" },
+    { "code": "ISWIG", "prefix_literal": "ISWIG", "name": "Isha Sacred Walks Instagram","platform": "IG", "url": "https://www.instagram.com/ishasacredwalks/",                 "category": "instagram" },
+    { "code": "SGTW",  "prefix_literal": "SGTW",  "name": "Twitter Sadhguru",           "platform": "TW", "url": "https://twitter.com/sadhgurujv",                             "category": "other_channel_yt" },
+    { "code": "IFTW",  "prefix_literal": "IFTW",  "name": "Twitter Isha Foundation",    "platform": "TW", "url": "https://twitter.com/ishafoundation",                         "category": "other_channel_yt" },
+    { "code": "SGFB",  "prefix_literal": "SGFB",  "name": "Facebook Sadhguru",          "platform": "FB", "url": "https://www.facebook.com/sadhguru/",                         "category": "other_channel_yt" },
+    { "code": "IFFB",  "prefix_literal": "IFFB",  "name": "Facebook Isha Foundation",   "platform": "FB", "url": "https://www.facebook.com/ishafoundation/",                   "category": "other_channel_yt" }
+  ]
+}

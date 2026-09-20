@@ -1,0 +1,300 @@
+{
+ "_source": "ISO 639-2/B - https://www.loc.gov/standards/iso639-2/php/code_list.php",
+ "_note": "Indian languages only. Bibliographic (B) codes, as the spec requires. The 22 scheduled languages of India come first, then other Indian regional languages, then English as the source language. Twelve of the regional languages have no ISO 639-2 code, so their ISO 639-3 code is used and flagged in the 'standard' field. The app accepts any 3-lowercase-letter code but the UI only offers this list.",
+ "languages": [
+  {
+   "code": "asm",
+   "name": "Assamese",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "ben",
+   "name": "Bengali",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "brx",
+   "name": "Bodo",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "doi",
+   "name": "Dogri",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "guj",
+   "name": "Gujarati",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "hin",
+   "name": "Hindi",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "kan",
+   "name": "Kannada",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "kas",
+   "name": "Kashmiri",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "kok",
+   "name": "Konkani",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "mai",
+   "name": "Maithili",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "mal",
+   "name": "Malayalam",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "mni",
+   "name": "Manipuri (Meitei)",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "mar",
+   "name": "Marathi",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "nep",
+   "name": "Nepali",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "ori",
+   "name": "Odia (Oriya)",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "pan",
+   "name": "Punjabi",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "san",
+   "name": "Sanskrit",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "sat",
+   "name": "Santali",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "snd",
+   "name": "Sindhi",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "tam",
+   "name": "Tamil",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "tel",
+   "name": "Telugu",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "urd",
+   "name": "Urdu",
+   "region": "IN",
+   "group": "Scheduled Languages (Eighth Schedule)",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "awa",
+   "name": "Awadhi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "bhb",
+   "name": "Bhili",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "bho",
+   "name": "Bhojpuri",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "bra",
+   "name": "Braj",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "hne",
+   "name": "Chhattisgarhi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "gbm",
+   "name": "Garhwali",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "grt",
+   "name": "Garo",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "gon",
+   "name": "Gondi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "bgc",
+   "name": "Haryanvi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "kha",
+   "name": "Khasi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "kfa",
+   "name": "Kodava",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "kfy",
+   "name": "Kumaoni",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "kru",
+   "name": "Kurukh",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "lbj",
+   "name": "Ladakhi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "mag",
+   "name": "Magahi",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "mwr",
+   "name": "Marwari",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "lus",
+   "name": "Mizo (Lushai)",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "raj",
+   "name": "Rajasthani",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-2/B"
+  },
+  {
+   "code": "tcy",
+   "name": "Tulu",
+   "region": "IN",
+   "group": "Other Indian Languages",
+   "standard": "ISO 639-3"
+  },
+  {
+   "code": "eng",
+   "name": "English",
+   "region": "IN",
+   "group": "Source Language",
+   "standard": "ISO 639-2/B"
+  }
+ ]
+}

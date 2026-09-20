@@ -1,0 +1,13 @@
+{
+  "_source": "ARCHIVING TEMPLATE folder shipped alongside the spec",
+  "_warning": "These template folder names contain spaces, which the naming spec forbids for archived folder/file names. They are reproduced verbatim here because that is what the shipped template uses. Confirm with Archives whether the subfolder names are exempt from the no-spaces rule.",
+  "subfolders": [
+    { "name": "Video Output",   "mandatory": true,  "note": "Final published MP4 - MUST exist" },
+    { "name": "Audio Output",   "mandatory": false, "note": "Dubbing tracks, WAV 24bit 48kHz mono" },
+    { "name": "Audio Project",  "mandatory": false, "note": "DAW session files" },
+    { "name": "Video Project",  "mandatory": false, "note": "Editor project files" },
+    { "name": "SRT_Transcript", "mandatory": false, "note": "SRT + bilingual script" },
+    { "name": "Common files",   "mandatory": false, "note": "Shared assets" },
+    { "name": "Fonts",          "mandatory": false, "note": "Fonts used in the edit" }
+  ]
+}
