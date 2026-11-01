@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from namer import SPEC_REVISION, __version__, engine, fsops
 from namer.registry import REGISTRY
 from namer.slug import clean_title, slugify
+import updater
 
 # Only one native dialog may be open at a time.
 _DIALOG_LOCK = threading.Lock()
@@ -242,6 +243,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True, "version": __version__})
         if route == "/api/history":
             return self._send(200, fsops.read_history())
+        if route == "/api/update/check":
+            return self._send(200, updater.check(__version__))
         return self._send(404, {"error": "Not found: " + route})
 
     def do_POST(self):
@@ -260,6 +263,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._fs(fsops.clear_history)
         if route == "/api/settings":
             return self._send(200, save_settings(payload))
+        if route == "/api/update/install":
+            return self._send(200, updater.install(self.server.shutdown))
         if route == "/api/scaffold/plan":
             return self._fs(lambda: fsops.plan_scaffold(
                 payload.get("dest_root"), payload.get("folder"),
@@ -493,6 +498,7 @@ def main():
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = "http://127.0.0.1:%d/" % port
 
+    updater.clean_up_old()
     print("ILP Archive Namer %s  (spec %s)" % (__version__, SPEC_REVISION))
     print("Running at " + url)
     print("Press Ctrl+C to stop.")
@@ -511,6 +517,8 @@ def main():
         print("\nStopped.")
     finally:
         httpd.server_close()
+    # After an update: start the new .exe now that the port is free.
+    updater.relaunch_if_pending(port)
 
 
 if __name__ == "__main__":

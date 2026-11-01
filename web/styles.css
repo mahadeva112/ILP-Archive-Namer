@@ -176,22 +176,46 @@ button, input, select { font-family: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .crumb { font-size: 13px; font-weight: 650; }
+
+/* A newer release on GitHub. */
+.update-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 14px 24px 0; padding: 11px 14px; border-radius: 12px;
+  background: var(--accent-bg); border: 1px solid var(--accent-ln);
+}
+.update-bar[hidden] { display: none; }
+.update-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg), 0 0 8px var(--accent);
+}
+.update-text { flex: 1; min-width: 220px; font-size: 12.5px; color: var(--text-2); }
+.update-text b { color: var(--text); font-weight: 650; margin-right: 6px; }
+.update-more {
+  background: none; border: 0; padding: 0; margin-left: 6px; cursor: pointer;
+  font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px;
+}
+.update-notes {
+  margin-top: 8px; max-height: 180px; overflow: auto; white-space: pre-wrap;
+  font-family: var(--sans); font-size: 12px; line-height: 1.55; color: var(--text-2);
+}
 .crumb span { color: var(--text-3); font-weight: 400; }
 
 /* The generated name follows you across every screen, so opening Reference
    mid-task never loses sight of it. */
+/* No box around it: a status light and the name. With no name yet, only a
+   red light shows (the words are in its tooltip). */
 .live {
   margin-left: auto; display: flex; align-items: center; gap: 9px;
-  background: var(--surface-2); border: 1px solid var(--line);
-  border-radius: 100px; padding: 5px 6px 5px 13px;
   max-width: 44%; min-width: 0;
 }
-.live.empty { opacity: .6; }
 .live .dot {
-  width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto;
-  background: var(--ok); box-shadow: 0 0 0 3px var(--ok-bg);
+  width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--ok); box-shadow: 0 0 0 3px var(--ok-bg), 0 0 8px var(--ok);
 }
-.live.empty .dot { background: var(--text-3); box-shadow: none; }
+.live.empty .dot {
+  background: var(--bad); box-shadow: 0 0 0 3px var(--bad-bg), 0 0 8px var(--bad);
+}
+.live.empty code, .live.empty .icon-btn { display: none; }
 .live code {
   font-family: var(--mono); font-size: 11.5px; color: var(--text-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -373,19 +397,15 @@ input[type="checkbox"] { width: auto; accent-color: var(--accent); }
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
   gap: 18px; align-items: start;
 }
-/* Create screen: the form and the results always end on one line. The row
-   is as tall as the taller side. The file list takes whatever height is left
-   and scrolls inside its card; its content sits in an absolutely placed box
-   so it never adds to the row height. Neither column leaves a gap. */
-.two-col:has(> .side-col) { align-items: stretch; }
-.two-col > div:has(> .form-card) { display: flex; flex-direction: column; }
-.form-card { flex: 1; display: flex; flex-direction: column; }
-.form-card .btn-row { margin-top: auto; padding-top: 16px; }
-
-.side-col { display: flex; flex-direction: column; gap: 16px; }
-.side-col > .card + .card { margin-top: 0; }
-.side-col:has(> #filesCard[style*="none"]) > .card:first-child { flex: 1; }
-#filesCard { flex: 1; display: flex; flex-direction: column; }
+/* Create screen, bottom row: the details and the file list always end on
+   one line. The row is as tall as the taller side; the file list takes what
+   height is left and scrolls inside its card, its content in an absolutely
+   placed box so it never adds to the row height. */
+.make-bottom { align-items: stretch; }
+.make-bottom > .card { display: flex; flex-direction: column; }
+.make-bottom > .card + .card { margin-top: 0; }
+.make-bottom:has(> #filesCard[style*="none"]) { grid-template-columns: 1fr; }
+#filesCard { display: flex; flex-direction: column; }
 .files-scroll { flex: 1; position: relative; min-height: 220px; }
 .files-scroll-in {
   position: absolute; inset: 0; overflow-y: auto;
@@ -398,36 +418,126 @@ input[type="checkbox"] { width: auto; accent-color: var(--accent); }
   gap: 16px; align-items: start;
 }
 
-/* ================================================= category selector */
-.cat-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
-  gap: 9px;
+/* ================================================= category selector
+   One row of tabs; the long label and a worked example are in the tooltip. */
+.cats { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cat-tab {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 7px 12px; border-radius: 10px; font: inherit; font-size: 12px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--line); color: var(--text-2);
+  transition: .13s;
 }
-.cat-btn {
-  position: relative; text-align: left; cursor: pointer;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 11px;
-  padding: 11px 12px; color: var(--text); font-family: var(--sans);
-  transition: .13s; display: block; width: 100%;
+.cat-tab b { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--text-3); }
+.cat-tab:hover { border-color: var(--accent-ln); color: var(--text); }
+.cat-tab.active { background: var(--accent-bg); border-color: var(--accent-ln); color: var(--accent); }
+.cat-tab.active b { color: var(--accent); }
+
+/* ============================================================= hero
+   The input that decides this category's name, first and large. */
+.hero {
+  position: relative; overflow: hidden; margin-bottom: 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center;
+  padding: 18px 22px 16px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1);
 }
-.cat-btn:hover { border-color: var(--accent-ln); background: var(--surface-2); }
-.cat-btn.active {
-  border-color: var(--accent); background: var(--accent-bg);
-  box-shadow: inset 0 0 0 1px var(--accent-ln);
+.hero::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--accent); }
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3);
 }
-.cat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
-.cat-ref {
-  font-family: var(--mono); font-size: 10.5px; font-weight: 700;
-  color: var(--accent); flex-shrink: 0;
+.hero-no {
+  width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto;
+  display: inline-grid; place-items: center;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0;
 }
-.cat-name { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
-.cat-shape {
-  font-family: var(--mono); font-size: 10px; color: var(--text-3);
-  margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.hero-fields { display: grid; gap: 10px 12px; }
+.hero-department, .hero-dept_backup { grid-template-columns: minmax(0, .8fr) minmax(0, 1.3fr); }
+.hero-fields .field { margin: 0; }
+.hero-fields[data-count="1"] .hero-field > label { display: none; }
+.hero-fields .hint { margin-top: 7px; }
+.hero-field > input, .hero-field > select {
+  min-height: 50px; font-size: 14px; border-radius: 12px; border-width: 1.5px;
+  background: var(--bg);
 }
-.cat-btn.active .cat-shape { color: var(--accent-2); }
-.cat-check { margin-left: auto; color: var(--accent); display: none; flex-shrink: 0; }
-.cat-btn.active .cat-check { display: block; }
-.cat-check svg { width: 14px; height: 14px; display: block; }
+[data-theme="light"] .hero-field > input, [data-theme="light"] .hero-field > select { background: var(--surface-2); }
+.hero-field .dp-trigger {
+  min-height: 52px; border-radius: 12px; border-width: 1.5px; background: var(--bg); padding: 7px 14px 7px 8px;
+}
+[data-theme="light"] .hero-field .dp-trigger { background: var(--surface-2); }
+.hero-field .dp-ico { width: 40px; height: 40px; border-radius: 10px; }
+.hero-field .dp-ico .m { font-size: 8.5px; }
+.hero-field .dp-ico .d { font-size: 16px; }
+.hero-field .dp-val { font-size: 16px; font-weight: 600; }
+.hero-field .dp-trigger.empty .dp-val { font-size: 14px; font-weight: 500; }
+
+/* link box: icon, input, Paste button */
+.bigbox {
+  display: flex; align-items: center; gap: 10px; min-height: 52px;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 4px 4px 4px 14px; transition: border-color .13s, box-shadow .13s;
+}
+[data-theme="light"] .bigbox { background: var(--surface-2); }
+.bigbox:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.bigbox.ok { border-color: var(--ok-ln); }
+.bigbox > svg { width: 18px; height: 18px; color: var(--text-3); flex: 0 0 auto; }
+.bigbox.ok > svg { color: var(--ok); }
+.bigbox input { border: 0; background: none; box-shadow: none; padding: 11px 0; font-size: 14px; }
+.bigbox input:focus { box-shadow: none; }
+.bigbox > button { flex: 0 0 auto; padding: 10px 16px; }
+
+/* exclusive code: four one-digit boxes */
+.otp { display: flex; align-items: center; gap: 8px; }
+.otp-pre { font-family: var(--mono); font-size: 20px; color: var(--text-3); margin-right: 4px; }
+.otp input {
+  width: 52px; height: 56px; padding: 0; text-align: center;
+  font-family: var(--mono); font-size: 24px; font-weight: 600;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px;
+}
+[data-theme="light"] .otp input { background: var(--surface-2); }
+.otp.ok input { border-color: var(--ok-ln); color: var(--ok); }
+
+/* a short choice as cards */
+.kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kinds button {
+  padding: 11px 13px; border-radius: 12px; cursor: pointer; text-align: left;
+  background: var(--bg); border: 1.5px solid var(--line); color: var(--text-2);
+  font: inherit; font-size: 12.5px; font-weight: 600; transition: .13s;
+}
+[data-theme="light"] .kinds button { background: var(--surface-2); }
+.kinds button small { display: block; margin-top: 2px; font-size: 10.5px; font-weight: 400; color: var(--text-3); }
+.kinds button:hover { border-color: var(--accent-ln); }
+.kinds button.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+/* parts-ready ring */
+.ring-wrap { text-align: center; }
+.ring { position: relative; width: 74px; height: 74px; }
+.ring svg { width: 74px; height: 74px; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 7; }
+.ring .bg { stroke: var(--surface-3); }
+.ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s, stroke .3s; }
+.ring.done .fg { stroke: var(--ok); }
+.ring span {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+}
+.ring-cap { display: block; margin-top: 5px; font-size: 10px; color: var(--text-3); }
+
+.namecard { margin-bottom: 16px; }
+.copybar-hint { font-size: 11px; color: var(--text-3); }
+.form-card .card-hd { margin-bottom: 4px; }
+.form-empty {
+  display: grid; place-items: center; text-align: center; min-height: 140px; padding: 20px;
+  border: 1px dashed var(--line); border-radius: 12px;
+  font-size: 12.5px; line-height: 1.6; color: var(--text-3);
+}
+.form-empty b { color: var(--text-2); font-weight: 600; }
+
+@media (max-width: 1080px) {
+  .hero, .hero-department, .hero-dept_backup, .kinds { grid-template-columns: 1fr; }
+  .ring-wrap { display: none; }
+}
 
 /* ==================================================== name breakdown
    The name is shown in its labelled pieces rather than as one string: a
@@ -465,6 +575,14 @@ input[type="checkbox"] { width: auto; accent-color: var(--accent); }
 .seg.flag-error .cap, .seg.flag-warning .cap { color: currentColor; }
 .seg.flag-error .cap { color: var(--bad); }
 .seg.flag-warning .cap { color: var(--warn); }
+/* A part the form has not filled yet: an outline with the part's name. */
+.seg.todo .tok {
+  color: var(--text-3); background: none; border: 1px dashed var(--text-3);
+  font-weight: 500; opacity: .8;
+}
+.pill.idle {
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text-3);
+}
 button.seg { background: none; border: none; cursor: pointer; font: inherit; }
 button.seg:hover .tok { filter: brightness(1.14); }
 
@@ -550,6 +668,13 @@ button.seg:hover .tok { filter: brightness(1.14); }
 .file-tag.must { background: var(--bad-bg); color: var(--bad); border-color: var(--bad-ln); }
 .file-tag.opt { background: var(--surface-2); color: var(--text-3); }
 
+/* Before the name is finished the files are laid out with their names
+   hidden behind bars: the shape of what is coming, no stand-in text. */
+#filesCard.pending .file-name, #filesCard.pending .tree .f {
+  color: transparent; background: var(--surface-3); border-radius: 5px; user-select: none;
+}
+#filesCard.pending .file-name { width: 70%; }
+#filesCard.pending .file-row .icon-btn { visibility: hidden; }
 .fgroup { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
 .fgroup + .fgroup { margin-top: 10px; }
 .fgroup-hd {
@@ -856,6 +981,9 @@ body.dp-lock { overflow: hidden; }
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft);
 }
 .dp-keys { flex: 1; font-size: 11px; color: var(--text-3); line-height: 1.9; }
+.dp-month .dp-type, .dp-month .dp-parse { display: none; }
+.dp-month .dp-big .d { font-size: 32px; }
+.dp-month .dp-cal .dp-hd { margin-top: 4px; }
 .dp-keys .kbd { margin: 0 2px; }
 
 @media (max-width: 640px) {

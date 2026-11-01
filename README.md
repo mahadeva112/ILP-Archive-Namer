@@ -70,6 +70,21 @@ then double-click `build_exe.bat`. The result is `dist\ILP-Archive-Namer.exe` â€
 one file, copy it anywhere, double-click, done. It is built `--noconsole`, so
 it too shows only the browser and exits when the tab is closed.
 
+**Updates.** Each time it starts, the app asks GitHub for the latest release
+of `mahadeva112/ILP-Archive-Namer`. If it is newer, a bar at the top of the
+page offers it. In the `.exe`, **Update now** downloads the release's
+`ILP-Archive-Namer.exe`, checks its size and checksum, swaps it in for the
+running file and restarts; the open tab reloads by itself. Run from Python,
+the button opens the release page instead. With no internet, nothing is shown.
+The update only works from 1.1.0 on: anyone still on 1.0.0 has to download
+1.1.0 by hand once.
+
+To publish an update: raise `__version__` in `namer/__init__.py`, write what
+changed in `release-notes.txt` (shown under *What's new*), commit and push,
+then double-click `release.bat`. It builds the `.exe` and creates the GitHub
+release `v<version>` with it attached. It needs the GitHub CLI, signed in once
+with `gh auth login`.
+
 ---
 
 ## What it does

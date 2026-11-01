@@ -23,6 +23,71 @@ async function boot() {
   wireDisk();
   loadHistory();
   startHeartbeat();
+  checkForUpdate();
+}
+
+/* ---------------------------------------------------------- updates
+   The server asks GitHub once per start. A newer release is offered here;
+   the .exe installs it and restarts on the same port, and this page reloads
+   once the new version answers. Run from source, the button opens the
+   release page instead. */
+async function checkForUpdate() {
+  let info;
+  try {
+    info = await (await fetch('/api/update/check', { cache: 'no-store' })).json();
+  } catch (e) {
+    return;
+  }
+  if (!info.ok || !info.newer) return;
+
+  $('updateTitle').textContent = 'Version ' + info.latest + ' is available';
+  $('updateSub').textContent = 'You have ' + info.current + '.';
+  $('updateNotes').textContent = info.notes || 'No notes for this release.';
+  $('updateMore').onclick = () => { $('updateNotes').hidden = !$('updateNotes').hidden; };
+  $('updateLater').onclick = () => { $('updateBar').hidden = true; };
+  const go = $('updateGo');
+  if (!info.can_install) {
+    go.textContent = 'Download';
+    go.onclick = () => window.open(info.page, '_blank', 'noopener');
+  } else {
+    go.onclick = () => installUpdate(info.latest);
+  }
+  $('updateBar').hidden = false;
+}
+
+async function installUpdate(version) {
+  const go = $('updateGo');
+  go.disabled = true;
+  $('updateLater').hidden = true;
+  $('updateSub').textContent = 'Downloading the new version…';
+  let res;
+  try {
+    res = await (await fetch('/api/update/install', { method: 'POST' })).json();
+  } catch (e) {
+    res = { ok: false, error: 'The app stopped answering. Close it and open it again.' };
+  }
+  if (!res.ok) {
+    $('updateSub').textContent = res.error;
+    go.disabled = false;
+    $('updateLater').hidden = false;
+    return;
+  }
+  $('updateSub').textContent = 'Installed. Restarting…';
+
+  // The old server stops and the new one starts on the same port.
+  const started = Date.now();
+  const poll = async () => {
+    try {
+      const h = await (await fetch('/api/health', { cache: 'no-store' })).json();
+      if (h.version === version) { location.reload(); return; }
+    } catch (e) { /* not up yet */ }
+    if (Date.now() - started > 45000) {
+      $('updateSub').textContent = 'Updated. Close this tab and open the app again.';
+      return;
+    }
+    setTimeout(poll, 1000);
+  };
+  setTimeout(poll, 1500);
 }
 
 /* When the app runs with no console window there is no Ctrl+C to press, so the
@@ -95,7 +160,7 @@ function wireChrome() {
     };
   });
 
-  $('btnReset').onclick = () => { STATE[CAT.id] = {}; renderForm(); build(); };
+  $('btnReset').onclick = () => { STATE[CAT.id] = defaultsFor(CAT); renderForm(); build(); };
   $('btnCheck').onclick = runCheck;
   $('checkInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') runCheck();
@@ -113,30 +178,57 @@ const TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
   + 'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'
   + '<path d="m5 13 4 4L19 7"/></svg>';
 
+// Short names for the category tabs; the full label is in the tooltip.
+const CAT_TAB = {
+  dubbed_yt: 'Dubbed YouTube',
+  other_channel_yt: 'Other official channel',
+  unlisted_yt: 'Unlisted original',
+  department: 'Department request',
+  sg_exclusive: 'Sadhguru Exclusive',
+  instagram: 'Instagram reel',
+  satsang: 'Satsang',
+  dept_backup: 'Department backup',
+};
+
+/* The input that decides each category's name sits in the large box at the
+   top of the screen; every other field is under "Check the details". */
+const HERO = {
+  dubbed_yt: { keys: ['video_id'], title: 'Start with the English video link' },
+  other_channel_yt: { keys: ['video_id'], title: 'Start with the English video link' },
+  instagram: { keys: ['video_id'], title: 'Start with the reel link' },
+  unlisted_yt: { keys: ['video_made_date'], title: 'When was the original video made?' },
+  department: { keys: ['department', 'title'], title: 'Which department asked, and for what video?' },
+  sg_exclusive: { keys: ['exclusive_code'], title: 'Enter the exclusive video code' },
+  satsang: { keys: ['satsang_kind', 'month'], title: 'Which satsang item, and which month?' },
+  dept_backup: { keys: ['department', 'month'], title: 'Which department, and which month is backed up?' },
+};
+const heroOf = (cat) => HERO[cat.id] || { keys: [], title: cat.label };
+
 function renderCategories() {
-  const grid = $('catGrid');
-  grid.innerHTML = '';
+  const strip = $('catGrid');
+  strip.innerHTML = '';
   BOOT.categories.forEach((c) => {
     const b = document.createElement('button');
-    b.className = 'cat-btn';
+    b.className = 'cat-tab';
     b.dataset.cat = c.id;
+    b.setAttribute('role', 'tab');
     // The worked example is the fastest way to recognise the right category.
-    b.innerHTML = '<div class="cat-top">'
-      + '<span class="cat-ref">' + esc(c.spec_ref) + '</span>'
-      + '<span class="cat-name">' + esc(c.label) + '</span>'
-      + '<span class="cat-check">' + TICK + '</span></div>'
-      + '<div class="cat-shape" title="' + esc(c.example) + '">'
-      + esc(c.example) + '</div>';
+    b.title = c.label + '\n' + c.example;
+    b.innerHTML = '<b>' + esc(c.spec_ref) + '</b>' + esc(CAT_TAB[c.id] || c.label);
     b.onclick = () => selectCategory(c.id);
-    grid.appendChild(b);
+    strip.appendChild(b);
   });
 }
 
 function selectCategory(id) {
   CAT = BOOT.categories.find((c) => c.id === id);
-  document.querySelectorAll('.cat-btn').forEach((b) => {
-    b.classList.toggle('active', b.dataset.cat === id);
+  document.querySelectorAll('.cat-tab').forEach((b) => {
+    const on = b.dataset.cat === id;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on);
+    if (on) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   });
+  $('heroTitle').textContent = heroOf(CAT).title;
   $('catBadge').textContent = CAT.spec_ref;
   $('catLabel').textContent = CAT.label;
   $('catBlurb').textContent = CAT.blurb;
@@ -156,7 +248,8 @@ function defaultsFor(cat) {
     String(today.getMonth() + 1).padStart(2, '0') + '-' +
     String(today.getDate()).padStart(2, '0');
   cat.fields.forEach((f) => {
-    if (f.type === 'date' && !v[f.key]) v[f.key] = iso;
+    // The date a video was made is its code; today would be a wrong guess.
+    if (f.type === 'date' && !v[f.key] && f.key !== 'video_made_date') v[f.key] = iso;
     if (f.type === 'month' && !v[f.key]) v[f.key] = iso.slice(0, 7);
   });
   if (cat.has_inner_files) v.voices = v.voices || 2;
@@ -168,14 +261,20 @@ function defaultsFor(cat) {
 function renderForm() {
   const v = STATE[CAT.id];
   const host = $('form');
+  const hero = $('heroFields');
+  const heroKeys = heroOf(CAT).keys;
   host.innerHTML = '';
+  hero.innerHTML = '';
+  hero.className = 'hero-fields hero-' + CAT.id;
+  hero.dataset.count = heroKeys.length;
 
   CAT.fields.forEach((f) => {
     if (f.show_if) {
       const [k, want] = Object.entries(f.show_if)[0];
       if ((v[k] || '') !== want) return;
     }
-    host.appendChild(buildField(f, v));
+    const inHero = heroKeys.includes(f.key);
+    (inHero ? hero : host).appendChild(buildField(f, v, inHero));
   });
 
   if (CAT.has_inner_files) {
@@ -185,6 +284,17 @@ function renderForm() {
       hint: 'One WAV per voice in the video. Mono, 24 bit, 48 kHz.',
     }, v));
   }
+
+  if (!host.children.length) {
+    const none = document.createElement('div');
+    none.className = 'form-empty';
+    none.innerHTML = '<b>Nothing else to fill in.</b><br>This name is made only from '
+      + 'what you chose above' + (CAT.has_inner_files ? '' : ', and the folder has no '
+      + 'fixed files inside') + '.';
+    host.appendChild(none);
+    return;
+  }
+  if (!CAT.fields.some((f) => f.key === 'title')) return;
 
   const wrap = document.createElement('div');
   wrap.className = 'checkline';
@@ -201,9 +311,12 @@ function renderForm() {
   host.appendChild(wrap);
 }
 
-function buildField(f, v) {
+function buildField(f, v, hero) {
+  if (hero && f.key === 'exclusive_code') return codeBoxes(f, v);
+  if (hero && f.type === 'select') return choiceCards(f, v);
+
   const wrap = document.createElement('div');
-  wrap.className = 'field';
+  wrap.className = 'field' + (hero ? ' hero-field' : '');
 
   const lab = document.createElement('label');
   lab.textContent = f.label + ' ';
@@ -272,9 +385,7 @@ function buildField(f, v) {
     // so the shared onInput below needs no special case.
     el = datePicker(v[f.key], f.label);
   } else if (f.type === 'month') {
-    el = document.createElement('input');
-    el.type = 'month';
-    el.value = v[f.key] || '';
+    el = datePicker(v[f.key], f.label, true);
   } else if (f.type === 'number') {
     el = document.createElement('input');
     el.type = 'number';
@@ -320,6 +431,7 @@ function buildField(f, v) {
   }
 
   if (f.type === 'video_url') {
+    if (hero) linkBox(el, wrap);
     const h = document.createElement('div');
     h.className = 'hint';
     h.innerHTML = 'Paste the full <strong>English</strong> URL &mdash; the code '
@@ -354,6 +466,142 @@ function buildField(f, v) {
     wrap.appendChild(h);
   }
 
+  return wrap;
+}
+
+/* The link field in the top box: a link icon, the input, and a Paste button
+   that reads the clipboard (the browser asks for permission the first time). */
+function linkBox(el, wrap) {
+  const box = document.createElement('div');
+  box.className = 'bigbox';
+  box.appendChild(iconSvg('<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/>'
+    + '<path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'));
+  wrap.insertBefore(box, el);
+  box.appendChild(el);
+  if (!el.placeholder) {
+    el.placeholder = CAT.id === 'instagram'
+      ? 'https://www.instagram.com/reel/...'
+      : 'https://youtu.be/...  or the bare video code';
+  }
+
+  const paste = document.createElement('button');
+  paste.type = 'button';
+  paste.className = 'primary';
+  paste.textContent = 'Paste link';
+  paste.onclick = async () => {
+    let text = '';
+    try { text = (await navigator.clipboard.readText()).trim(); } catch (e) { /* refused */ }
+    if (!text) {
+      el.focus();
+      toast('Press Ctrl+V to paste the link');
+      return;
+    }
+    el.value = text;
+    el.dispatchEvent(new Event('input'));
+  };
+  box.appendChild(paste);
+
+  const mark = () => box.classList.toggle('ok', !!el.value.trim());
+  el.addEventListener('input', mark);
+  mark();
+}
+
+/* The exclusive code as four one-digit boxes. Typing moves on, Backspace
+   moves back, pasting fills them all. A shorter code is zero-padded, as the
+   engine does. */
+function codeBoxes(f, v) {
+  const wrap = document.createElement('div');
+  wrap.className = 'field hero-field';
+  const row = document.createElement('div');
+  row.className = 'otp';
+  const pre = document.createElement('span');
+  pre.className = 'otp-pre';
+  pre.textContent = 'SGEX' + (v.lang || '');
+  row.appendChild(pre);
+
+  const boxes = [0, 1, 2, 3].map((i) => {
+    const b = document.createElement('input');
+    b.inputMode = 'numeric';
+    b.autocomplete = 'off';
+    b.setAttribute('aria-label', f.label + ', digit ' + (i + 1));
+    b.value = (v[f.key] || '')[i] || '';
+    row.appendChild(b);
+    return b;
+  });
+  boxes[0].dataset.key = f.key;
+
+  const commit = () => {
+    const digits = boxes.map((b) => b.value);
+    // A gap ("0_40") is not a code yet.
+    const gap = digits.some((d, j) => !d && digits.slice(j + 1).some(Boolean));
+    v[f.key] = gap ? '' : digits.join('');
+    row.classList.toggle('ok', v[f.key].length === 4);
+    scheduleBuild();
+  };
+  boxes.forEach((b, i) => {
+    b.addEventListener('input', () => {
+      // Several digits at once (fast typing, autofill) flow into the next boxes.
+      const d = b.value.replace(/\D/g, '');
+      d.split('').slice(0, 4 - i).forEach((c, j) => { boxes[i + j].value = c; });
+      if (!d) b.value = '';
+      const next = boxes[Math.min(i + Math.max(d.length, 1), 3)];
+      if (d && next !== b) next.focus();
+      commit();
+    });
+    b.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !b.value && boxes[i - 1]) boxes[i - 1].focus();
+    });
+    b.addEventListener('paste', (e) => {
+      const d = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+      if (!d) return;
+      e.preventDefault();
+      const full = d.padStart(4, '0');
+      boxes.forEach((x, j) => { x.value = full[j]; });
+      boxes[3].focus();
+      commit();
+    });
+  });
+  row.classList.toggle('ok', (v[f.key] || '').length === 4);
+  wrap.appendChild(row);
+
+  const h = document.createElement('div');
+  h.className = 'hint';
+  h.textContent = 'From the exclusive video list. Pasting the code fills all four boxes.';
+  wrap.appendChild(h);
+  return wrap;
+}
+
+/* A short list of options in the top box shows as cards, not a dropdown. */
+const CHOICE_NOTE = {
+  video: 'Monthly satsang video',
+  audio_quote: 'Short audio clip',
+  audio_gm: 'Audio, with a meditation name',
+};
+
+function choiceCards(f, v) {
+  const wrap = document.createElement('div');
+  wrap.className = 'field hero-field';
+  const row = document.createElement('div');
+  row.className = 'kinds';
+  row.setAttribute('role', 'radiogroup');
+  row.setAttribute('aria-label', f.label);
+  if (!v[f.key]) v[f.key] = f.default || f.options[0].value;
+
+  f.options.forEach((o) => {
+    const b = document.createElement('button');
+    const on = v[f.key] === o.value;
+    b.type = 'button';
+    b.className = on ? 'on' : '';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', on);
+    if (on) b.dataset.key = f.key;
+    b.innerHTML = '<span>' + esc(o.label)
+      + (CHOICE_NOTE[o.value] ? '<small>' + esc(CHOICE_NOTE[o.value]) + '</small>' : '')
+      + '</span>';
+    b.onclick = () => { v[f.key] = o.value; renderForm(); scheduleBuild(); };
+    row.appendChild(b);
+  });
+  wrap.appendChild(row);
   return wrap;
 }
 
@@ -442,7 +690,7 @@ async function lookup(raw, inputEl, statusEl) {
 
   // Suggest the matching channel, but never overwrite a deliberate choice.
   if (data.channel && CAT.fields.some((f) => f.type === 'channel')) {
-    const sel = document.querySelector('#form select[data-key="channel"]');
+    const sel = document.querySelector('#s-make select[data-key="channel"]');
     if (sel && !v._channel_touched
         && [...sel.options].some((o) => o.value === data.channel)) {
       sel.value = data.channel;
@@ -455,7 +703,7 @@ async function lookup(raw, inputEl, statusEl) {
   if (data.video_id) bits.push('code <strong>' + esc(data.video_id) + '</strong>');
 
   if (data.title) {
-    const titleEl = document.querySelector('#form input[data-key="title"]');
+    const titleEl = document.querySelector('#s-make input[data-key="title"]');
     if (titleEl && !titleEl.value.trim()) {
       titleEl.value = data.title;
       v.title = data.title;
@@ -478,7 +726,8 @@ async function lookup(raw, inputEl, statusEl) {
    sits and never needs a scroll. Browsing changes nothing until the date is
    confirmed. Values in and out are ISO yyyy-mm-dd, exactly what
    <input type="date"> gave, so the engine sees no difference. Archive dates
-   are never in the future, so future days cannot be picked. */
+   are never in the future, so future days cannot be picked. A month field
+   uses the same dialog on its 12-month grid; its value is yyyy-mm. */
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -558,12 +807,23 @@ function parseTyped(raw) {
   return (r.getMonth() === m - 1 && r.getDate() === d) ? r : null;
 }
 
-function datePicker(iso, label) {
+const firstOfMonth = (d) => mkDate(d.getFullYear(), d.getMonth(), 1);
+const fmtMonth = (d) => MON[d.getMonth()] + '-' + d.getFullYear();
+
+function fromMonth(s) {
+  const m = /^(\d{4})-(\d{2})/.exec(s || '');
+  return m ? mkDate(+m[1], +m[2] - 1, 1) : null;
+}
+
+const triggerDate = (t) => (t.dataset.month ? fromMonth(t.value) : fromIso(t.value));
+
+function datePicker(iso, label, month) {
   const t = document.createElement('button');
   t.type = 'button';
   t.className = 'dp-trigger';
   t.setAttribute('aria-haspopup', 'dialog');
-  t.dataset.label = label || 'Pick a date';
+  t.dataset.label = label || (month ? 'Pick a month' : 'Pick a date');
+  if (month) t.dataset.month = '1';
   t.value = iso || '';
   paintTrigger(t);
   t.addEventListener('click', () => openPicker(t));
@@ -571,8 +831,17 @@ function datePicker(iso, label) {
 }
 
 function paintTrigger(t) {
-  const d = fromIso(t.value);
+  const d = triggerDate(t);
   t.classList.toggle('empty', !d);
+  if (d && t.dataset.month) {
+    t.innerHTML = '<span class="dp-ico"><span class="m">' + MON[d.getMonth()] + '</span>'
+      + '<span class="d">' + String(d.getFullYear()).slice(2) + '</span></span>'
+      + '<span class="dp-main"><div class="dp-val">' + MONTH[d.getMonth()] + ' '
+      + d.getFullYear() + '</div><div class="dp-sub">Goes into the name as <b>'
+      + fmtMonth(d) + '</b></div></span>';
+    t.insertAdjacentHTML('beforeend', DP_ICON.chev.replace('<svg', '<svg class="dp-chev"'));
+    return;
+  }
   t.innerHTML = d
     ? '<span class="dp-ico"><span class="m">' + MON[d.getMonth()] + '</span>'
       + '<span class="d">' + d.getDate() + '</span></span>'
@@ -580,7 +849,8 @@ function paintTrigger(t) {
       + '<div class="dp-sub"><b>' + WEEKDAY[d.getDay()] + '</b> &middot; '
       + agoText(d) + '</div></span>'
     : '<span class="dp-ico"><span class="m">&ndash;</span></span>'
-      + '<span class="dp-main"><div class="dp-val">Pick a date</div></span>';
+      + '<span class="dp-main"><div class="dp-val">'
+      + (t.dataset.month ? 'Pick a month' : 'Pick a date') + '</div></span>';
   t.insertAdjacentHTML('beforeend', DP_ICON.chev.replace('<svg', '<svg class="dp-chev"'));
 }
 
@@ -594,12 +864,7 @@ function openPicker(t) {
       + '<div class="dp-lbl">Selected</div>'
       + '<div class="dp-big"></div>'
       + '<div class="dp-out"></div>'
-      + '<div class="dp-quick">'
-        + '<button type="button" data-days="0">Today</button>'
-        + '<button type="button" data-days="-1">Yesterday</button>'
-        + '<button type="button" data-days="-7">1 week ago</button>'
-        + '<button type="button" data-days="-30">1 month ago</button>'
-      + '</div>'
+      + '<div class="dp-quick"></div>'
     + '</div>'
     + '<div class="dp-cal">'
       + '<div class="dp-top"><h3></h3>'
@@ -620,14 +885,26 @@ function openPicker(t) {
     + '</div>'
   + '</div>';
   const pop = scrim.firstElementChild;
+  const month = !!t.dataset.month;
   pop.setAttribute('aria-label', t.dataset.label);
   pop.querySelector('h3').textContent = t.dataset.label;
+  pop.classList.toggle('dp-month', month);
+  if (month) {
+    pop.querySelector('.dp-keys').textContent = 'Pick a month';
+    pop.querySelector('.dp-ok').textContent = 'Use this month';
+  }
+  // Quick picks: n days back for a date, n months back for a month.
+  const quick = month
+    ? [['This month', 0], ['Last month', -1], ['2 months ago', -2], ['3 months ago', -3]]
+    : [['Today', 0], ['Yesterday', -1], ['1 week ago', -7], ['1 month ago', -30]];
+  pop.querySelector('.dp-quick').innerHTML = quick.map(([label, n]) =>
+    '<button type="button" data-n="' + n + '" data-label="' + label + '"></button>').join('');
   document.body.appendChild(scrim);
   document.body.classList.add('dp-lock');
   t.classList.add('open');
 
-  const start = fromIso(t.value) || today();
-  DP = { trigger: t, scrim, pop, pick: start, cursor: start, view: 'days' };
+  const start = triggerDate(t) || (month ? firstOfMonth(today()) : today());
+  DP = { trigger: t, scrim, pop, month, pick: start, cursor: start, view: month ? 'months' : 'days' };
   markSegment(t.dataset.key, true);
 
   // Keys never reach the screen-switching shortcuts while the dialog is up.
@@ -651,8 +928,8 @@ function openPicker(t) {
       body.focus();
     }
   });
-  pop.querySelectorAll('[data-days]').forEach((b) => {
-    b.onclick = () => choose(addDays(today(), +b.dataset.days), 'dp-zoom');
+  pop.querySelectorAll('[data-n]').forEach((b) => {
+    b.onclick = () => choose(quickDate(+b.dataset.n), 'dp-zoom');
   });
   pop.querySelector('.dp-x').onclick = () => closePicker(true);
   pop.querySelector('.dp-cancel').onclick = () => closePicker(true);
@@ -683,6 +960,9 @@ function closePicker(refocus) {
   if (refocus && trigger.isConnected) trigger.focus();
 }
 
+const quickDate = (n) => (DP.month
+  ? addMonths(firstOfMonth(today()), n) : addDays(today(), n));
+
 // Select without closing: the dialog waits for "Use this date".
 function choose(d, anim) {
   if (d > today()) return;
@@ -690,14 +970,16 @@ function choose(d, anim) {
   const moved = d.getMonth() !== c.getMonth() || d.getFullYear() !== c.getFullYear();
   DP.pick = d;
   DP.cursor = d;
-  DP.view = 'days';
-  renderPicker(anim || (moved ? (d < c ? 'dp-slide-r' : 'dp-slide-l') : null));
+  DP.view = DP.month ? 'months' : 'days';
+  const slide = DP.month
+    ? d.getFullYear() !== c.getFullYear() : moved;
+  renderPicker(anim || (slide ? (d < c ? 'dp-slide-r' : 'dp-slide-l') : null));
 }
 
 function pickDate(d) {
   if (d > today()) return;
   const t = DP.trigger;
-  t.value = toIso(d);
+  t.value = DP.month ? toIso(d).slice(0, 7) : toIso(d);
   paintTrigger(t);
   closePicker(true);
   t.dispatchEvent(new Event('input'));
@@ -726,6 +1008,12 @@ function onPickerType(raw) {
 }
 
 function onPickerKey(e) {
+  if (DP.month) {
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 }[e.key];
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickDate(DP.pick); }
+    if (step && DP.view === 'months') { e.preventDefault(); choose(notFuture(addMonths(DP.cursor, step))); }
+    return;
+  }
   if (/^[0-9]$/.test(e.key)) {
     e.preventDefault();
     const input = DP.pop.querySelector('input');
@@ -783,7 +1071,8 @@ function renderPicker(anim) {
     atEnd = y >= now.getFullYear();
   } else {
     const s = y - (y % 12);
-    title = '<button type="button" class="yr on" data-dpview="days">' + s + ' &ndash; ' + (s + 11) + '</button>';
+    title = '<button type="button" class="yr on" data-dpview="' + (DP.month ? 'months' : 'days')
+      + '">' + s + ' &ndash; ' + (s + 11) + '</button>';
     atEnd = s + 11 >= now.getFullYear();
   }
   hd.innerHTML = '<div class="dp-title">' + title + '</div>'
@@ -849,6 +1138,11 @@ function renderPicker(anim) {
     b.ondblclick = () => pickDate(fromIso(b.dataset.iso));
   });
   body.querySelectorAll('[data-month]').forEach((b) => {
+    if (DP.month) {
+      b.onclick = () => choose(mkDate(y, +b.dataset.month, 1));
+      b.ondblclick = () => pickDate(mkDate(y, +b.dataset.month, 1));
+      return;
+    }
     b.onclick = () => {
       DP.cursor = notFuture(addMonths(cursor, +b.dataset.month - m));
       DP.view = 'days';
@@ -863,16 +1157,20 @@ function renderPicker(anim) {
     };
   });
 
-  pop.querySelectorAll('[data-days]').forEach((b) => {
-    const d = addDays(now, +b.dataset.days);
-    b.innerHTML = b.textContent.replace(/\d{2}-\w{3}$/, '')
-      + '<span>' + pad2(d.getDate()) + '-' + MON[d.getMonth()] + '</span>';
+  pop.querySelectorAll('[data-n]').forEach((b) => {
+    const d = quickDate(+b.dataset.n);
+    b.innerHTML = esc(b.dataset.label) + '<span>' + (DP.month
+      ? fmtMonth(d) : pad2(d.getDate()) + '-' + MON[d.getMonth()]) + '</span>';
     b.classList.toggle('on', sameDay(d, sel));
   });
-  pop.querySelector('.dp-big').innerHTML = '<div class="d">' + pad2(sel.getDate()) + '</div>'
-    + '<div class="my">' + MON[sel.getMonth()] + ' ' + sel.getFullYear() + '</div>'
-    + '<div class="wd">' + WEEKDAY[sel.getDay()] + ' &middot; ' + agoText(sel) + '</div>';
-  pop.querySelector('.dp-out').innerHTML = 'Goes into the name as<code>' + fmtDate(sel) + '</code>';
+  pop.querySelector('.dp-big').innerHTML = DP.month
+    ? '<div class="d">' + MON[sel.getMonth()] + '</div>'
+      + '<div class="my">' + sel.getFullYear() + '</div>'
+    : '<div class="d">' + pad2(sel.getDate()) + '</div>'
+      + '<div class="my">' + MON[sel.getMonth()] + ' ' + sel.getFullYear() + '</div>'
+      + '<div class="wd">' + WEEKDAY[sel.getDay()] + ' &middot; ' + agoText(sel) + '</div>';
+  pop.querySelector('.dp-out').innerHTML = 'Goes into the name as<code>'
+    + (DP.month ? fmtMonth(sel) : fmtDate(sel)) + '</code>';
   if (document.activeElement !== pop.querySelector('input')) body.focus();
 }
 
@@ -882,16 +1180,58 @@ function scheduleBuild() {
   debounceTimer = setTimeout(build, 180);
 }
 
+/* Fields the name needs that are still empty. A field shown only for one
+   option (the meditation name) is needed whenever it is shown. */
+function missingFields(v) {
+  return CAT.fields.filter((f) => {
+    if (f.show_if) {
+      const [k, want] = Object.entries(f.show_if)[0];
+      if ((v[k] || '') !== want) return false;
+    } else if (!f.required) {
+      return false;
+    }
+    return !String(v[f.key] || '').trim();
+  });
+}
+
+// Stand-in values, only so the engine can lay out the rest of the name.
+function withPlaceholders(v, missing) {
+  const out = Object.assign({}, v);
+  missing.forEach((f) => {
+    if (f.type === 'date') out[f.key] = toIso(today());
+    else if (f.type === 'month') out[f.key] = toIso(today()).slice(0, 7);
+    else if (f.key === 'exclusive_code') out[f.key] = '0';
+    else out[f.key] = 'X';
+  });
+  return out;
+}
+
+function setRing(ready, total, ok) {
+  $('ringFg').style.strokeDashoffset = total ? 194.8 * (1 - ready / total) : 194.8;
+  $('ringTxt').textContent = total ? ready + '/' + total : '\u2013';
+  $('ring').classList.toggle('done', !!ok);
+}
+
 async function build() {
   const v = STATE[CAT.id];
   updateLangHint(v.lang);
+  const pre = document.querySelector('#heroFields .otp-pre');
+  if (pre) pre.textContent = 'SGEX' + (v.lang || '');
+
+  // An unfinished form is not a wrong one: with fields still empty the name
+  // is laid out with those parts drawn as outlines, not shown as an error.
+  const missing = missingFields(v);
+  const todo = missing.map((f) => f.key);
 
   let res;
   try {
     const r = await fetch('/api/build', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category: CAT.id, fields: v }),
+      body: JSON.stringify({
+        category: CAT.id,
+        fields: todo.length ? withPlaceholders(v, missing) : v,
+      }),
     });
     res = await r.json();
   } catch (e) {
@@ -903,19 +1243,16 @@ async function build() {
   issuesEl.innerHTML = '';
 
   if (res.error) {
-    // Before anything has been typed, a missing field is not a mistake worth
-    // colouring red - it is just an empty form.
-    const started = CAT.fields.some(
-      (f) => f.required && String(v[f.key] || '').trim() && f.type !== 'date');
     $('outSegments').innerHTML = '';
     nameEl.style.display = 'block';
-    nameEl.textContent = started ? res.error : 'Fill in the fields to generate a name';
-    nameEl.classList.toggle('bad', started);
-    nameEl.style.color = started ? '' : 'var(--text-3)';
+    nameEl.textContent = res.error;
+    nameEl.classList.add('bad');
+    nameEl.style.color = '';
     $('outVerdict').style.display = 'none';
     $('filesCard').style.display = 'none';
     $('nasWrap').style.display = 'none';
     $('slugHint') && ($('slugHint').textContent = '');
+    setRing(0, 0);
     setLive(null);
     setMakeSummary(null);
     clearDiskContext();
@@ -924,6 +1261,23 @@ async function build() {
 
   nameEl.style.display = 'none';
   nameEl.classList.remove('bad');
+  const parts = res.segments.filter((sg) => sg.kind !== 'sep');
+
+  if (todo.length) {
+    renderSegments($('outSegments'), res.segments, res.folder, true, todo);
+    const need = [...new Set(parts.filter((sg) => segTodo(sg, todo)).map((sg) => sg.label))];
+    setRing(parts.length - need.length, parts.length, false);
+    renderPending($('outVerdict'), need);
+    $('nasWrap').style.display = 'none';
+    $('slugHint') && ($('slugHint').textContent = '');
+    renderFiles(res, true);
+    setLive(null);
+    setMakeSummary(null, need);
+    clearDiskContext();
+    return;
+  }
+
+  setRing(parts.length, parts.length, res.ok);
   renderSegments($('outSegments'), res.segments, res.folder, true);
   renderVerdict($('outVerdict'), res.issues, res.ok);
   setLive(res.folder, res.ok);
@@ -971,7 +1325,18 @@ async function build() {
    engine returns the same segments it concatenated to make the name, so a
    field in the wrong slot or a lowercase language code is visible without
    reading the whole thing character by character. */
-function renderSegments(host, segments, folder, clickable) {
+// The Series-Ep-Title part of #5 is filed under "series" but also needs the title.
+const SEG_ALSO = { series: ['title'] };
+const segTodo = (sg, todo) => !!sg.field
+  && [sg.field].concat(SEG_ALSO[sg.field] || []).some((k) => todo.includes(k));
+
+function renderPending(host, need) {
+  host.style.display = 'flex';
+  host.innerHTML = '<span class="pill idle">Not ready</span><span>Still needed: '
+    + esc(need.join(', ')) + '</span>';
+}
+
+function renderSegments(host, segments, folder, clickable, todo) {
   host.innerHTML = '';
   if (!segments || !segments.length) {
     host.textContent = '';
@@ -991,18 +1356,22 @@ function renderSegments(host, segments, folder, clickable) {
 
     // A field the form can focus becomes a button; otherwise it is inert.
     const canFocus = clickable && s.field
-      && document.querySelector('#form [data-key="' + s.field + '"]');
+      && document.querySelector('#s-make [data-key="' + s.field + '"]');
     const el = document.createElement(canFocus ? 'button' : 'div');
+    const pending = todo && segTodo(s, todo);
     el.className = 'seg c' + (colour++ % 4)
-      + (s.flag ? ' flag-' + s.flag : '');
-    el.innerHTML = '<span class="tok">' + esc(s.text) + '</span>'
-      + '<span class="cap">' + esc(s.label) + '</span>';
-    el.title = s.note || (s.label + ': ' + s.text);
+      + (pending ? ' todo' : s.flag ? ' flag-' + s.flag : '');
+    el.innerHTML = pending
+      ? '<span class="tok">' + esc(s.label) + '</span><span class="cap">'
+        + (s.field === 'video_id' ? 'from the link' : 'needed') + '</span>'
+      : '<span class="tok">' + esc(s.text) + '</span>'
+        + '<span class="cap">' + esc(s.label) + '</span>';
+    el.title = pending ? s.label + ': still needed' : s.note || (s.label + ': ' + s.text);
     if (s.field) el.dataset.field = s.field;
     if (canFocus) {
       el.type = 'button';
       el.onclick = () => {
-        const f = document.querySelector('#form [data-key="' + s.field + '"]');
+        const f = document.querySelector('#s-make [data-key="' + s.field + '"]');
         if (!f) return;
         f.focus();
         f.scrollIntoView({ block: 'center' });
@@ -1063,7 +1432,7 @@ function setLive(folder, ok) {
   const bar = $('liveBar');
   $('liveName').textContent = folder || 'No name yet';
   bar.classList.toggle('empty', !folder);
-  bar.title = folder || 'The name you are working on';
+  bar.title = folder || 'No name yet';
   $('liveCopy').onclick = folder ? (e) => copyIcon(folder, e.currentTarget) : null;
   $('liveCopy').style.visibility = folder ? 'visible' : 'hidden';
   const dot = bar.querySelector('.dot');
@@ -1071,11 +1440,15 @@ function setLive(folder, ok) {
   dot.style.boxShadow = folder && ok === false ? '0 0 0 3px var(--bad-bg)' : '';
 }
 
-function setMakeSummary(res) {
+function setMakeSummary(res, need) {
   const sum = $('makeSummary');
   const btn = $('btnGoDisk');
   if (!res) {
-    sum.textContent = 'Fill in the fields to generate a name';
+    if (need && need.length) {
+      sum.innerHTML = '<b>Not ready</b> &middot; still needed: ' + esc(need.join(', '));
+    } else {
+      sum.textContent = 'Fill in the fields to generate a name';
+    }
     btn.disabled = true;
     $('btnCopyFolder2').onclick = null;
     return;
@@ -1132,15 +1505,18 @@ function slugOf(folder, category) {
   return parts[2] || '';
 }
 
-function renderFiles(res) {
+/* pending: the name is not finished, so the files are laid out with their
+   names hidden, to show what is coming without showing stand-in text. */
+function renderFiles(res, pending) {
   if (!res.files || !res.files.length) {
     $('filesCard').style.display = 'none';
     return;
   }
 
   $('filesCard').style.display = '';     // flex, from styles.css
-  $('filesTitle').textContent = 'What goes inside · ' + res.files.length
-    + ' file' + (res.files.length === 1 ? '' : 's');
+  $('filesCard').classList.toggle('pending', !!pending);
+  $('filesTitle').textContent = (pending ? 'What will be made · ' : 'What goes inside · ')
+    + res.files.length + ' file' + (res.files.length === 1 ? '' : 's');
 
   /* Grouped by destination subfolder, because that is the question being
      asked: what goes where. */
@@ -1203,7 +1579,7 @@ function renderFiles(res) {
     host.appendChild(group);
   });
 
-  let tree = '<span class="fold">' + esc(res.folder) + '/</span>\n';
+  let tree = '<span class="fold">' + esc(pending ? 'Your folder' : res.folder) + '/</span>\n';
   const order = res.template.map((t) => t.name);
   order.forEach((folderName, fi) => {
     const isLastFolder = fi === order.length - 1;
@@ -1222,6 +1598,8 @@ function renderFiles(res) {
   });
   $('outTree').innerHTML = tree;
 
+  $('btnCopyAll').disabled = !!pending;
+  $('btnCopyTree').disabled = !!pending;
   const flat = [res.folder].concat(res.files.map((f) => f.folder + '/' + f.name));
   $('btnCopyAll').onclick = (e) => copy(flat.join('\n'), e.target);
   $('btnCopyTree').onclick = (e) =>

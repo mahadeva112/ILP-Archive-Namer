@@ -21,4 +21,4 @@ if exist "dist\ILP-Archive-Namer.exe" (
 ) else (
   echo Build failed. Run "pip install pyinstaller" and try again.
 )
-pause
+if /i not "%~1"=="nopause" pause
