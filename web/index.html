@@ -119,7 +119,7 @@
 
       <div class="two-col">
         <div>
-          <div class="card">
+          <div class="card form-card">
             <div class="card-hd">
               <span class="chip">Step 2</span>
               <span id="catLabel">&mdash;</span>
@@ -133,7 +133,7 @@
           </div>
         </div>
 
-        <div class="sticky-col">
+        <div class="side-col">
           <div class="card">
             <div class="copybar">
               <div class="section-title">Folder name</div>
@@ -166,8 +166,12 @@
               </div>
             </div>
 
-            <div id="outFiles"></div>
-            <div class="tree" id="outTree" style="display:none"></div>
+            <div class="files-scroll">
+              <div class="files-scroll-in">
+                <div id="outFiles"></div>
+                <div class="tree" id="outTree" style="display:none"></div>
+              </div>
+            </div>
 
             <div class="btn-row">
               <button class="ghost" id="btnCopyAll">Copy all filenames</button>

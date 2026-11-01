@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Final Layout Mockup</title>
+<!-- Static design mockup of the Create screen as it would be built: the most
+     important input of each category sits in the top box, the name is shown
+     full width, details and the folder tree sit side by side. Every category
+     works. Names, files and NAS paths match what the engine produces.
+     Uses the real styles.css. Not served. -->
+<link rel="stylesheet" href="styles.css">
+<style>
+.wrap { padding: 20px 24px 110px; max-width: 1500px; }
+
+/* ------------------------------------------------------------ mock switch */
+.mock-bar {
+  position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 70;
+  display: flex; align-items: center; gap: 4px; padding: 4px;
+  background: var(--surface-3); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-2); font-size: 11.5px;
+}
+.mock-bar span { color: var(--text-3); padding: 0 8px; font-weight: 600; }
+.mock-bar button {
+  background: none; border: 0; color: var(--text-2); cursor: pointer;
+  padding: 6px 12px; border-radius: 8px; font: inherit; font-weight: 600;
+}
+.mock-bar button:hover { background: var(--surface-2); color: var(--text); }
+
+/* --------------------------------------------------------- category tabs */
+.cats { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cats button {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 7px;
+  padding: 7px 12px; border-radius: 10px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); color: var(--text-2);
+  font: inherit; font-size: 12px; font-weight: 600; transition: .13s;
+}
+.cats button b { font-family: var(--mono); font-size: 10.5px; color: var(--text-3); font-weight: 600; }
+.cats button:hover { border-color: var(--accent-ln); color: var(--text); }
+.cats button.on { background: var(--accent-bg); border-color: var(--accent-ln); color: var(--accent); }
+.cats button.on b { color: var(--accent); }
+
+/* ------------------------------------------------------------------ hero */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center;
+  padding: 18px 22px 16px; border-radius: 16px; margin-bottom: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  position: relative; overflow: hidden;
+}
+.hero::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--accent); }
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+}
+.hero-eyebrow .no {
+  width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: #fff; font-size: 10px; letter-spacing: 0;
+}
+.hero-hint { font-size: 11.5px; color: var(--text-3); margin-top: 8px; min-height: 18px; }
+.hero-hint.ok { color: var(--ok); }
+.hero-hint.bad { color: var(--bad); }
+.hero-hint code { font-family: var(--mono); }
+
+.bigbox {
+  display: flex; align-items: center; gap: 10px; min-height: 52px;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 4px 4px 4px 14px; transition: border-color .13s, box-shadow .13s;
+}
+[data-theme="light"] .bigbox { background: var(--surface-2); }
+.bigbox:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.bigbox.ok { border-color: var(--ok-ln); }
+.bigbox > svg { width: 18px; height: 18px; color: var(--text-3); flex: 0 0 auto; }
+.bigbox.ok > svg { color: var(--ok); }
+.bigbox input, .bigbox select {
+  border: 0; background: none; box-shadow: none; padding: 11px 0; font-size: 14px;
+}
+.bigbox input.mono { font-family: var(--mono); }
+.bigbox input:focus, .bigbox select:focus { box-shadow: none; }
+.bigbox > button { flex: 0 0 auto; padding: 10px 16px; }
+.hero-row { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: 10px; }
+.hero-row .bigbox { padding-right: 14px; }
+.hero-row .bigbox select { cursor: pointer; }
+.hero-row .tag {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-3); flex: 0 0 auto;
+}
+
+/* big date / month button */
+.bigdate {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 52px; cursor: pointer;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 7px 14px 7px 8px; text-align: left; font: inherit; color: var(--text);
+  transition: border-color .13s, box-shadow .13s;
+}
+[data-theme="light"] .bigdate { background: var(--surface-2); }
+.bigdate:hover { border-color: var(--accent-ln); }
+.bigdate:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.bigdate.ok { border-color: var(--ok-ln); }
+.bigdate .ic {
+  width: 40px; height: 40px; border-radius: 10px; flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-ln);
+  font-family: var(--mono); line-height: 1;
+}
+.bigdate .ic .m { font-size: 8.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.bigdate .ic .d { font-size: 16px; font-weight: 600; margin-top: 2px; }
+.bigdate .v { font-family: var(--mono); font-size: 17px; font-weight: 600; }
+.bigdate .s { font-size: 11.5px; color: var(--text-3); }
+.bigdate .s b { color: var(--text-2); font-weight: 600; }
+.bigdate.empty .v { font-family: var(--sans); font-size: 14px; color: var(--text-3); font-weight: 500; }
+.bigdate .go { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--accent); }
+
+/* 4-digit code */
+.otp { display: flex; align-items: center; gap: 8px; }
+.otp input {
+  width: 52px; height: 56px; text-align: center; padding: 0;
+  font-family: var(--mono); font-size: 24px; font-weight: 600;
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px;
+}
+[data-theme="light"] .otp input { background: var(--surface-2); }
+.otp input:focus { border-color: var(--accent); box-shadow: var(--ring); }
+.otp.ok input { border-color: var(--ok-ln); color: var(--ok); }
+.otp .pre { font-family: var(--mono); font-size: 20px; color: var(--text-3); margin-right: 4px; }
+
+/* item-type choice */
+.kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.kinds button {
+  display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; cursor: pointer;
+  background: var(--bg); border: 1.5px solid var(--line); color: var(--text-2);
+  font: inherit; font-size: 12.5px; font-weight: 600; text-align: left;
+}
+[data-theme="light"] .kinds button { background: var(--surface-2); }
+.kinds button svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--text-3); }
+.kinds button small { display: block; font-weight: 400; font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+.kinds button:hover { border-color: var(--accent-ln); }
+.kinds button.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.kinds button.on svg { color: var(--accent); }
+
+/* progress ring */
+.ring { position: relative; width: 74px; height: 74px; }
+.ring svg { width: 74px; height: 74px; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 7; }
+.ring .bg { stroke: var(--surface-3); }
+.ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s, stroke .3s; }
+.ring.done .fg { stroke: var(--ok); }
+.ring span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 15px; font-weight: 600; }
+.ring-cap { display: block; text-align: center; font-size: 10px; color: var(--text-3); margin-top: 5px; }
+
+/* -------------------------------------------------------------- name rail */
+.namecard { margin-bottom: 16px; }
+.name-rail { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 3px; }
+.part {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  background: none; border: 0; cursor: pointer; font: inherit; color: inherit; padding: 0;
+}
+.part .tok {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; white-space: nowrap;
+  padding: 7px 10px; border-radius: 9px; border: 1px solid transparent; transition: .15s;
+}
+.part .cap {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--text-3); display: flex; align-items: center; gap: 4px;
+}
+.part .cap svg { width: 10px; height: 10px; opacity: 0; transition: opacity .15s; }
+.part:hover .cap svg { opacity: 1; }
+.part:hover .tok { filter: brightness(1.15); }
+.part.c0 .tok { color: var(--accent);   background: var(--accent-bg); border-color: var(--accent-ln); }
+.part.c1 .tok { color: var(--accent-2); background: var(--sand-bg);   border-color: var(--sand-ln); }
+.part.c2 .tok { color: var(--ok);       background: var(--ok-bg);     border-color: var(--ok-ln); }
+.part.c3 .tok { color: var(--info);     background: var(--info-bg);   border-color: var(--info-ln); }
+.part.todo .tok { color: var(--text-3); border: 1px dashed var(--text-3); font-weight: 500; opacity: .75; }
+.part.loading .tok {
+  color: transparent; min-width: 170px; border-color: var(--line);
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%; animation: shimmer 1.1s linear infinite;
+}
+.part.pop .tok { animation: pop .35s cubic-bezier(.2, .9, .3, 1.4); }
+.sep { font-family: var(--mono); font-size: 17px; color: var(--text-3); padding: 7px 1px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } }
+.name-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--text-3); flex-wrap: wrap; }
+.name-foot .nas { flex: 1; min-width: 260px; padding: 8px 11px; font-size: 11.5px; }
+
+/* ------------------------------------------------------------- bottom grid */
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+@media (max-width: 1080px) { .grid, .hero, .hero-row, .kinds { grid-template-columns: 1fr; } }
+.grid > .card { display: flex; flex-direction: column; margin: 0; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.fields .wide { grid-column: 1 / -1; }
+.nothing {
+  flex: 1; display: grid; place-items: center; text-align: center; padding: 20px;
+  border: 1px dashed var(--line); border-radius: 12px; font-size: 12.5px; color: var(--text-3); line-height: 1.6;
+}
+.nothing b { color: var(--text-2); font-weight: 600; }
+
+.datefield {
+  width: 100%; display: flex; align-items: center; gap: 11px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px;
+  padding: 6px 10px 6px 7px; text-align: left; font: inherit; color: var(--text);
+  transition: border-color .13s, box-shadow .13s;
+}
+.datefield:hover { border-color: var(--accent-ln); }
+.datefield .ic {
+  width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-ln);
+  font-family: var(--mono); line-height: 1;
+}
+.datefield .ic .m { font-size: 7.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.datefield .ic .d { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.datefield .v { font-family: var(--mono); font-size: 13.5px; font-weight: 500; }
+.datefield .s { font-size: 11px; color: var(--text-3); }
+.datefield .s b { color: var(--text-2); font-weight: 600; }
+.datefield .cal-ic { margin-left: auto; width: 15px; height: 15px; color: var(--text-3); }
+
+/* folder tree */
+.preview { flex: 1; position: relative; min-height: 240px; }
+.preview-in { position: absolute; inset: 0; overflow-y: auto; }
+.tree-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--text-2); }
+.tree-row:hover { background: var(--surface-2); }
+.tree-row svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.tree-row.folder { color: var(--text); font-weight: 600; }
+.tree-row.folder svg { color: var(--warn); }
+.tree-row.file svg { color: var(--text-3); }
+.tree-row.file .n { color: var(--ok); word-break: break-all; }
+.tree-row .tag { margin-left: auto; flex: 0 0 auto; font-weight: 400; color: var(--text-3); font-size: 10.5px; }
+.tree-row .file-tag { font-size: 9px; padding: 2px 6px; }
+.tree-row.root { color: var(--accent); }
+.tree-row.root svg { color: var(--accent); }
+.tree-row.root .n { word-break: break-all; }
+.i1 { padding-left: 26px; } .i2 { padding-left: 46px; }
+.skel { height: 9px; border-radius: 5px; background: var(--surface-3); flex: 1; max-width: 240px; opacity: .8; }
+
+/* ================================================================ dialog */
+.scrim {
+  position: fixed; inset: 0; z-index: 80; display: grid; place-items: center;
+  background: rgba(8, 6, 5, .62); padding: 16px; animation: fade .15s ease;
+}
+[data-theme="light"] .scrim { background: rgba(60, 40, 25, .28); }
+@keyframes fade { from { opacity: 0; } }
+.dlg {
+  width: 640px; max-width: 100%; max-height: calc(100vh - 32px); overflow: auto;
+  display: grid; grid-template-columns: 210px minmax(0, 1fr);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow-2); animation: rise .2s cubic-bezier(.2, .8, .3, 1);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+@media (max-width: 640px) { .dlg { grid-template-columns: 1fr; } }
+.dlg-side { padding: 20px 16px 16px; border-right: 1px solid var(--line); background: var(--surface-2); border-radius: 18px 0 0 18px; display: flex; flex-direction: column; gap: 12px; }
+.dlg-side .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.big-date .d { font-family: var(--mono); font-size: 40px; font-weight: 600; line-height: 1; color: var(--accent); }
+.big-date .my { font-family: var(--mono); font-size: 15px; margin-top: 6px; }
+.big-date .wd { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+.as { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+.as code { display: inline-block; margin-top: 4px; font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-ln); padding: 3px 8px; border-radius: 6px; }
+.quick { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+.quick button { text-align: left; padding: 7px 10px; border-radius: 8px; cursor: pointer; background: none; border: 1px solid transparent; color: var(--text-2); font: inherit; font-size: 12px; display: flex; justify-content: space-between; }
+.quick button span { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.quick button:hover { background: var(--surface); border-color: var(--line); color: var(--text); }
+.quick button.on { background: var(--accent-bg); border-color: var(--accent-ln); color: var(--accent); }
+.dlg-main { padding: 16px 18px 18px; display: flex; flex-direction: column; min-width: 0; }
+.dlg-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dlg-top h3 { font-size: 13.5px; font-weight: 650; flex: 1; }
+.typein { display: flex; align-items: center; gap: 8px; padding: 0 10px; margin-bottom: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; }
+.typein:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.typein svg { width: 15px; height: 15px; color: var(--text-3); }
+.typein input { border: 0; background: none; padding: 8px 0; font-family: var(--mono); font-size: 12.5px; }
+.typein input:focus { box-shadow: none; }
+.typein input::placeholder { font-family: var(--sans); font-size: 12px; }
+.parse { font-size: 11px; min-height: 16px; margin: 2px 2px 8px; color: var(--text-3); }
+.parse.ok { color: var(--ok); } .parse.bad { color: var(--bad); }
+.parse code { font-family: var(--mono); }
+.cal-hd { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.cal-hd .t { flex: 1; display: flex; gap: 2px; }
+.cal-hd .t button { display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 7px; background: none; border: 0; color: var(--text); cursor: pointer; font: inherit; font-size: 14px; font-weight: 650; }
+.cal-hd .t button.yr { font-family: var(--mono); font-weight: 500; color: var(--text-2); }
+.cal-hd .t button:hover { background: var(--surface-2); color: var(--accent); }
+.cal-hd .t button.on { background: var(--accent-bg); color: var(--accent); }
+.cal-hd .t svg { width: 11px; height: 11px; }
+.calnav { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; background: none; border: 1px solid transparent; color: var(--text-2); padding: 0; }
+.calnav svg { width: 16px; height: 16px; }
+.calnav:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line); color: var(--accent); }
+.calnav:disabled { opacity: .3; cursor: default; }
+.cal-body:focus { outline: none; }
+.dow, .days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.dow span { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 6px 0; }
+.dow span:first-child { color: var(--accent-2); }
+.days { gap: 2px; }
+.day { position: relative; height: 38px; border-radius: 9px; border: 0; background: none; cursor: pointer; color: var(--text); font: inherit; font-size: 13px; font-variant-numeric: tabular-nums; }
+.day:hover:not(:disabled) { background: var(--surface-3); }
+.day.sun { color: var(--accent-2); }
+.day.other { color: var(--text-3); opacity: .55; }
+.day.today { font-weight: 700; color: var(--accent); }
+.day.today::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); }
+.day.cursor { box-shadow: inset 0 0 0 1.5px var(--accent-ln); }
+.day.sel, .day.sel:hover { background: var(--accent); color: #fff; font-weight: 700; opacity: 1; }
+.day.sel::after { background: #fff; }
+.day:disabled { opacity: .25; cursor: not-allowed; text-decoration: line-through; }
+.g12 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0; }
+.cell { height: 54px; border-radius: 10px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--line-soft); color: var(--text-2); }
+.cell.yr { font-family: var(--mono); font-weight: 500; }
+.cell:hover:not(:disabled) { border-color: var(--accent-ln); color: var(--accent); }
+.cell.now { color: var(--accent); border-color: var(--accent-ln); }
+.cell.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cell:disabled { opacity: .3; cursor: not-allowed; }
+.sl { animation: sl .2s ease; } .sr { animation: sr .2s ease; } .zm { animation: zm .18s ease; }
+@keyframes sl { from { opacity: 0; transform: translateX(18px); } }
+@keyframes sr { from { opacity: 0; transform: translateX(-18px); } }
+@keyframes zm { from { opacity: 0; transform: scale(.96); } }
+.dlg-ft { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.dlg-ft .keys { font-size: 11px; color: var(--text-3); flex: 1; line-height: 1.9; }
+.dlg-ft .keys .kbd { margin: 0 2px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#d9825f"/>
+        <rect x="10" y="18.6" width="28" height="16.4" rx="3" fill="#fff"/>
+        <path d="M21.7 23.1 29.3 26.8 21.7 30.5z" fill="#c05f3f"/>
+      </svg>
+      <div><h1>Archive Namer</h1><p>ILP &middot; Isha Archives</p></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Workflow</div>
+      <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create a name <span class="kbd">1</span></button>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Folder &amp; files <span class="kbd">2</span></button>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Check a name <span class="kbd">3</span></button>
+      <div class="nav-label">Library</div>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/></svg>Reference <span class="kbd">4</span></button>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History <span class="kbd">5</span></button>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="crumb" id="crumb"></div>
+      <div class="live empty" id="liveBar"><span class="dot"></span><code id="liveName">No name yet</code></div>
+    </header>
+
+    <div class="wrap">
+      <div class="cats" id="cats"></div>
+
+      <div class="hero">
+        <div>
+          <div class="hero-eyebrow"><span class="no">1</span><span id="heroTitle"></span></div>
+          <div id="heroBody"></div>
+          <div class="hero-hint" id="heroHint"></div>
+        </div>
+        <div>
+          <div class="ring" id="ring">
+            <svg viewBox="0 0 74 74"><circle class="bg" cx="37" cy="37" r="31"/><circle class="fg" id="ringFg" cx="37" cy="37" r="31" stroke-dasharray="194.8" stroke-dashoffset="97"/></svg>
+            <span id="ringTxt"></span>
+          </div>
+          <span class="ring-cap">parts ready</span>
+        </div>
+      </div>
+
+      <div class="card namecard">
+        <div class="copybar">
+          <div class="section-title">Folder name</div>
+          <div class="spacer"></div>
+          <span style="font-size:11px;color:var(--text-3)">Click any part to change it</span>
+          <button class="copy">Copy</button>
+        </div>
+        <div class="name-rail" id="rail"></div>
+        <div class="name-foot" id="nameFoot"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="copybar"><div class="section-title"><span style="color:var(--accent)">2</span> &nbsp;Check the details</div></div>
+          <div class="fields" id="fields"></div>
+          <div class="checkline" id="ftcLine" style="margin-top:auto;padding-top:6px">
+            <input type="checkbox" id="ftc"><label for="ftc" style="text-transform:none;letter-spacing:0;margin:0;font-size:12px">Force Title Case (fold acronyms like USA to Usa)</label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="copybar">
+            <div class="section-title" id="filesTitle">What will be made</div>
+            <div class="spacer"></div>
+            <button class="copy">Copy tree</button>
+          </div>
+          <div class="preview"><div class="preview-in" id="tree"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actionbar">
+      <div class="sum" id="sum"></div>
+      <div class="spacer"></div>
+      <button class="ghost" id="btnClear">Clear</button>
+      <button class="ghost">Copy name</button>
+      <button class="primary" id="btnDisk" disabled>Create on disk</button>
+    </div>
+  </div>
+</div>
+
+<div class="mock-bar" role="group" aria-label="Mockup">
+  <span>Mockup</span>
+  <button id="mkEmpty">Empty</button>
+  <button id="mkFill">Fill example</button>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------ icons */
+const I = {
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>',
+  pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  cal: '<svg class="cal-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  kb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>',
+  quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M8 7v10M4 10v4M16 7v10M20 10v4"/></svg>',
+  lotus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-8-2-9-6 3 0 6 1 9 4 3-3 6-4 9-4-1 4-5 6-9 6z"/><path d="M12 18c-2-3-2-8 0-12 2 4 2 9 0 12z"/></svg>',
+};
+
+/* ------------------------------------------------------------ dates */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const pad = (n) => String(n).padStart(2, '0');
+const mk = (y, m, d) => new Date(y, m, d);
+const TODAY = (() => { const t = new Date(); return mk(t.getFullYear(), t.getMonth(), t.getDate()); })();
+const THIS_MONTH = mk(TODAY.getFullYear(), TODAY.getMonth(), 1);
+const fmt = (d) => pad(d.getDate()) + '-' + MON[d.getMonth()] + '-' + d.getFullYear();
+const fmtM = (d) => MON[d.getMonth()] + '-' + d.getFullYear();
+const same = (a, b) => a && b && a.getTime() === b.getTime();
+const addDays = (d, n) => mk(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const addMonths = (d, n) => {
+  const f = mk(d.getFullYear(), d.getMonth() + n, 1);
+  return mk(f.getFullYear(), f.getMonth(), Math.min(d.getDate(), mk(f.getFullYear(), f.getMonth() + 1, 0).getDate()));
+};
+const past = (d) => (d > TODAY ? TODAY : d);
+function ago(d) {
+  const n = Math.round((TODAY - d) / 864e5);
+  if (n === 0) return 'Today';
+  if (n === 1) return 'Yesterday';
+  if (n < 14) return n + ' days ago';
+  if (n < 60) return Math.round(n / 7) + ' weeks ago';
+  if (n < 730) return Math.round(n / 30.44) + ' months ago';
+  return Math.floor(n / 365.25) + ' years ago';
+}
+function parseDate(raw) {
+  const s = raw.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!s) return null;
+  if (s === 'today') return TODAY;
+  if (s === 'yesterday') return addDays(TODAY, -1);
+  let y, m, d, x;
+  if ((x = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/))) [y, m, d] = [+x[1], +x[2], +x[3]];
+  else if ((x = s.match(/^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{2}|\d{4})$/))) [d, m, y] = [+x[1], +x[2], +x[3]];
+  else if ((x = s.match(/^(\d{1,2})[-/. ]?([a-z]{3,9})[-/., ]*(\d{2}|\d{4})$/))) {
+    const i = MON.findIndex((n) => x[2].startsWith(n.toLowerCase()));
+    if (i < 0) return null;
+    [d, m, y] = [+x[1], i + 1, +x[3]];
+  } else return null;
+  if (y < 100) y += 2000;
+  const r = mk(y, m - 1, d);
+  return r.getMonth() === m - 1 && r.getDate() === d ? r : null;
+}
+
+/* ------------------------------------------------------------ data
+   Channel codes, departments, NAS routes and name patterns as in data/*.json
+   and namer/engine.py. */
+const LANGS = [['hin', 'Hindi'], ['tel', 'Telugu'], ['tam', 'Tamil'], ['ben', 'Bengali'], ['kan', 'Kannada'], ['mar', 'Marathi'], ['guj', 'Gujarati']];
+const DEPTS = [['ILP', 'IndianLanguagePublications'], ['IPC', 'IPC (spec example)'], ['IEP', 'InnerEngineeringProgram'], ['ADI', 'AdiYogi'], ['EVE', 'Events'], ['HYS', 'HathaYogaSchool']];
+const NAS = { pub: 'ILP NAS Drive/video-edit-tr-pub', priv: 'ILP NAS Drive/video-edit-tr-priv1', dept: 'ILP NAS Drive/dept-ilp' };
+const KINDS = [['video', 'Video', 'Monthly satsang video', I.video], ['audio_quote', 'Audio quote', 'Short audio clip', I.quote], ['audio_gm', 'Guided meditation', 'Audio, with a meditation name', I.lotus]];
+const langTitle = (c) => c[0].toUpperCase() + c.slice(1);
+const slug = (t) => t.trim().replace(/[^A-Za-z0-9 ]+/g, '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join('-');
+
+const CATS = [
+  { id: 'dubbed_yt', ref: '#1', tab: 'Dubbed YouTube', label: 'Dubbed YouTube video (Sadhguru / Isha Foundation)', hero: 'link', nas: 'pub',
+    channels: [['SGYT', 'Sadhguru YT Channel', 'SGYT'], ['SGTA', 'Sadhguru Tamil Channel', 'SGTA'], ['IFCYT', 'Isha Foundation YT Channel', 'IFCYT']],
+    example: { link: 'https://youtu.be/xVbcVQApKig', title: 'A Lesson From Guru Nanak' } },
+  { id: 'other_channel_yt', ref: '#2', tab: 'Other official channel', label: 'Other official Isha channel / self-created', hero: 'link', nas: 'pub',
+    channels: [['IEC', 'Inner Engineering', 'IECYT'], ['IUC', 'Isha USA YT channel', 'IUCYT'], ['IFV', 'IshaFoundationVideo', 'IFVYT'], ['SOI', 'Sounds of Isha', 'SOIYT']],
+    example: { link: 'https://youtu.be/xVbcVQApKig', title: 'Take Charge Of Your Life' } },
+  { id: 'unlisted_yt', ref: '#3', tab: 'Unlisted original', label: 'YouTube video whose original is unlisted', hero: 'made', nas: 'priv',
+    channels: [['SGL', 'Unlisted videos on SGC', 'SGLYT']],
+    example: { made: mk(2021, 2, 12), title: 'A Lesson From Guru Nanak' } },
+  { id: 'department', ref: '#4', tab: 'Department request', label: 'Other video requested by a department', hero: 'dept', nas: 'priv',
+    example: { dept: 'IPC', title: 'How To Meditate', lang: 'tel' } },
+  { id: 'sg_exclusive', ref: '#5', tab: 'Sadhguru Exclusive', label: 'Sadhguru Exclusive video', hero: 'code', nas: 'priv',
+    example: { excode: '0040', series: 'Realized Beings', episode: '4', title: 'The Rascal Saint' } },
+  { id: 'instagram', ref: '#6', tab: 'Instagram reel', label: 'Instagram reel / post', hero: 'link', ig: true, nas: 'pub',
+    channels: [['SGIG', 'Sadhguru Instagram', 'SGIG']],
+    example: { link: 'https://www.instagram.com/reel/CgTjVwqFBTQ/', title: 'Keep This In Mind For Your Next Meal' } },
+  { id: 'satsang', ref: '#7', tab: 'Satsang', label: 'Satsang video / audio', hero: 'satsang', nas: 'priv',
+    example: { kind: 'audio_gm', month: mk(2022, 5, 1), strand: 'Chitshakti', title: 'Meditation Peace', lang: 'tel' } },
+  { id: 'dept_backup', ref: 'backup', tab: 'Department backup', label: 'Department backup', hero: 'backup', nas: 'dept', noFiles: true,
+    example: { dept: 'ILP', month: mk(2021, 8, 1) } },
+];
+
+const blank = (c) => ({
+  channel: c.channels ? c.channels[0][0] : '', lang: 'hin', link: '', code: '', title: '', date: TODAY,
+  made: null, dept: 'ILP', excode: '', series: '', episode: '', kind: 'video', month: THIS_MONTH,
+  strand: '', voices: 2, loading: false,
+});
+const STATE = {};
+CATS.forEach((c) => { STATE[c.id] = blank(c); });
+let CAT = CATS[0];
+let lookupTimer = null;
+const V = () => STATE[CAT.id];
+
+/* ------------------------------------------------------------ name parts */
+function parts() {
+  const v = V();
+  const t = slug(v.title);
+  const lang = v.lang;
+  const ch = CAT.channels && CAT.channels.find((x) => x[0] === v.channel);
+  const title = { text: t || 'Title', cap: t ? 'title' : v.loading ? 'fetching title' : 'title', ok: !!t, loading: v.loading && !t, go: 'title' };
+  const created = { text: fmt(v.date), cap: 'created', ok: true, go: 'date' };
+  switch (CAT.hero) {
+    case 'link':
+      return [{ text: ch[2] + lang, cap: 'channel + lang', ok: true, go: 'channel' },
+        { text: v.code || 'video code', cap: v.code ? 'video code' : 'from the link', ok: !!v.code, go: 'hero' },
+        title, created];
+    case 'made':
+      return [{ text: ch[2] + lang, cap: 'channel + lang', ok: true, go: 'channel' },
+        { text: v.made ? fmt(v.made) : 'video made', cap: 'video made', ok: !!v.made, go: 'hero' },
+        title, created];
+    case 'dept':
+      return [{ text: v.dept, cap: 'department', ok: true, go: 'hero' }, title,
+        { text: langTitle(lang), cap: 'language', ok: true, go: 'lang' }, created];
+    case 'code': {
+      const ep = v.episode ? 'Ep-' + pad(+v.episode) : '';
+      const block = [slug(v.series), ep, slug(v.title)].filter(Boolean).join('-');
+      const full = v.series && v.episode && v.title;
+      return [{ text: 'SGEX' + lang, cap: 'series + lang', ok: true, go: 'lang' },
+        { text: v.excode.length === 4 ? v.excode : '0000', cap: 'exclusive code', ok: v.excode.length === 4, go: 'hero', sep: '' },
+        { text: full ? block : 'Series-Ep-00-Title', cap: 'series / episode / title', ok: !!full, go: v.series ? 'title' : 'series' }];
+    }
+    case 'satsang': {
+      const tail = { audio_gm: '-Audio', audio_quote: '-Audio-Quote', video: '-Video' }[v.kind];
+      const p = [{ text: 'Satsang-' + fmtM(v.month) + tail, cap: 'satsang month', ok: true, go: 'hero' }];
+      if (v.kind === 'audio_gm') {
+        p.push({ text: 'GM', cap: 'guided meditation', ok: true, go: 'hero' },
+          { text: slug(v.strand) || 'Meditation', cap: 'meditation', ok: !!slug(v.strand), go: 'strand' });
+      }
+      return p.concat([title, { text: langTitle(lang), cap: 'language', ok: true, go: 'lang' }]);
+    }
+    default:
+      return [{ text: 'Department-Backup', cap: 'backup', ok: true, go: 'hero' },
+        { text: v.dept, cap: 'department', ok: true, go: 'hero', sep: '-' },
+        { text: fmtM(v.month), cap: 'month', ok: true, go: 'hero', sep: '-' }];
+  }
+}
+
+function fileBase() {
+  const v = V();
+  if (CAT.hero === 'code') {
+    const ep = v.episode ? 'Ep-' + pad(+v.episode) : '';
+    return v.series && v.episode && v.title ? [slug(v.series), ep, slug(v.title)].join('-') : '';
+  }
+  return slug(v.title);
+}
+
+/* ------------------------------------------------------------ hero */
+function renderHero() {
+  const v = V();
+  const body = $('heroBody');
+  let title = '';
+  let html = '';
+  if (CAT.hero === 'link') {
+    title = CAT.ig ? 'Start with the reel link' : 'Start with the English video link';
+    html = '<div class="bigbox" id="linkBox">' + I.link
+      + '<input class="mono" id="link" autocomplete="off" spellcheck="false" placeholder="'
+      + (CAT.ig ? 'https://www.instagram.com/reel/...' : 'https://youtu.be/...  or a bare 11-character code') + '">'
+      + '<button class="primary" id="btnPaste">Paste link</button></div>';
+  } else if (CAT.hero === 'made') {
+    title = 'When was the original video made?';
+    html = '<button type="button" class="bigdate" id="madeBtn"></button>';
+  } else if (CAT.hero === 'dept') {
+    title = 'Which department asked, and for what video?';
+    html = '<div class="hero-row">'
+      + '<div class="bigbox"><span class="tag">Dept</span><select id="hDept">' + DEPTS.map((d) => '<option value="' + d[0] + '">' + d[0] + ' - ' + d[1] + '</option>').join('') + '</select></div>'
+      + '<div class="bigbox" id="titleBox"><span class="tag">Title</span><input id="hTitle" autocomplete="off" placeholder="Meaningful video title in English"></div></div>';
+  } else if (CAT.hero === 'code') {
+    title = 'Enter the 4-digit exclusive video code';
+    html = '<div class="otp" id="otp"><span class="pre">SGEX' + v.lang + '</span>'
+      + [0, 1, 2, 3].map((i) => '<input inputmode="numeric" maxlength="1" data-i="' + i + '" aria-label="Digit ' + (i + 1) + '">').join('') + '</div>';
+  } else if (CAT.hero === 'satsang') {
+    title = 'Which satsang item, and which month?';
+    html = '<div class="kinds" id="kinds">' + KINDS.map((k) => '<button type="button" data-k="' + k[0] + '">' + k[3] + '<span>' + k[1] + '<small>' + k[2] + '</small></span></button>').join('') + '</div>'
+      + '<button type="button" class="bigdate" id="monthBtn"></button>';
+  } else {
+    title = 'Which department, and which month is backed up?';
+    html = '<div class="hero-row">'
+      + '<div class="bigbox"><span class="tag">Dept</span><select id="hDept">' + DEPTS.map((d) => '<option value="' + d[0] + '">' + d[0] + ' - ' + d[1] + '</option>').join('') + '</select></div>'
+      + '<button type="button" class="bigdate" id="monthBtn"></button></div>';
+  }
+  $('heroTitle').textContent = title;
+  body.innerHTML = html;
+
+  if ($('link')) {
+    $('link').value = v.link;
+    $('link').oninput = onLink;
+    $('btnPaste').onclick = async () => {
+      let text = '';
+      try { text = await navigator.clipboard.readText(); } catch (e) { /* no clipboard permission */ }
+      $('link').value = codeFrom(text) ? text : CAT.example.link;
+      onLink();
+    };
+  }
+  if ($('madeBtn')) $('madeBtn').onclick = () => openCal('made', 'Date the video was made', false);
+  if ($('monthBtn')) $('monthBtn').onclick = () => openCal('month', CAT.hero === 'satsang' ? 'Satsang month' : 'Backup month', true);
+  if ($('hDept')) { $('hDept').value = v.dept; $('hDept').onchange = () => { v.dept = $('hDept').value; update(); }; }
+  if ($('hTitle')) { $('hTitle').value = v.title; $('hTitle').oninput = () => { v.title = $('hTitle').value; syncTitle('hTitle'); update(); }; }
+  if ($('otp')) {
+    const boxes = [...$('otp').querySelectorAll('input')];
+    boxes.forEach((b, i) => {
+      b.value = v.excode[i] || '';
+      b.oninput = () => {
+        b.value = b.value.replace(/\D/g, '').slice(-1);
+        v.excode = boxes.map((x) => x.value).join('');
+        if (b.value && boxes[i + 1]) boxes[i + 1].focus();
+        update();
+      };
+      b.onkeydown = (e) => { if (e.key === 'Backspace' && !b.value && boxes[i - 1]) boxes[i - 1].focus(); };
+      b.onpaste = (e) => {
+        const d = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+        if (!d) return;
+        e.preventDefault();
+        boxes.forEach((x, j) => { x.value = d[j] || ''; });
+        v.excode = d;
+        update();
+      };
+    });
+  }
+  if ($('kinds')) {
+    $('kinds').querySelectorAll('button').forEach((b) => {
+      b.onclick = () => { v.kind = b.dataset.k; renderFields(); update(); };
+    });
+  }
+}
+
+const codeFrom = (raw) => {
+  const s = raw.trim();
+  if (CAT.ig) {
+    const m = s.match(/instagram\.com\/(?:reel|p)\/([A-Za-z0-9_-]{6,})/) || s.match(/^([A-Za-z0-9_-]{9,12})$/);
+    return m ? m[1] : '';
+  }
+  const m = s.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/) || s.match(/^([A-Za-z0-9_-]{11})$/);
+  return m ? m[1] : '';
+};
+
+function onLink() {
+  const v = V();
+  v.link = $('link').value;
+  const code = codeFrom(v.link);
+  const changed = code !== v.code;
+  v.code = code;
+  if (changed) clearTimeout(lookupTimer);
+  if (code && changed && !v.title && !CAT.ig) {
+    v.loading = true;
+    const cat = CAT;
+    lookupTimer = setTimeout(() => {
+      STATE[cat.id].loading = false;
+      STATE[cat.id].title = cat.example.title;
+      if (CAT === cat) { syncTitle(); update('title'); }
+    }, 1200);
+  }
+  if (!code) v.loading = false;
+  update(changed && code ? 'code' : null);
+}
+
+function syncTitle(from) {
+  const v = V();
+  ['title', 'hTitle'].forEach((id) => { if ($(id) && id !== from) $(id).value = v.title; });
+}
+
+/* ------------------------------------------------------------ details */
+function field(label, inner, opts) {
+  opts = opts || {};
+  return '<div class="field' + (opts.wide ? ' wide' : '') + '"><label>' + label + (opts.req === false ? '' : ' <span class="req">*</span>') + '</label>'
+    + inner + (opts.hint ? '<div class="hint" ' + (opts.hintId ? 'id="' + opts.hintId + '"' : '') + '>' + opts.hint + '</div>' : '') + '</div>';
+}
+const langSel = () => '<select id="fLang">' + LANGS.map((l) => '<option value="' + l[0] + '">' + l[1] + ' - ' + l[0] + '</option>').join('') + '</select>';
+const voices = () => '<div class="stepper-row"><div class="stepper"><button type="button" id="vMinus">&minus;</button><input type="number" id="voices" min="1" max="12"><button type="button" id="vPlus">+</button></div><div class="stepper-note" id="vNote"></div></div>';
+
+function renderFields() {
+  const v = V();
+  let h = '';
+  const titleField = (label, wide) => field(label || 'Video title in English', '<input id="title" autocomplete="off" placeholder="' + (CAT.hero === 'link' && !CAT.ig ? 'Filled from the link' : 'What Is Grace') + '">', { wide: wide !== false, hint: '', hintId: 'slugHint' });
+  const dateField = (label) => field(label || 'Date created', '<button type="button" class="datefield" id="dateBtn"></button>');
+  const chan = () => field(CAT.ig ? 'Instagram account' : 'Channel', '<select id="fChan">' + CAT.channels.map((c) => '<option value="' + c[0] + '">' + c[0] + ' - ' + c[1] + '</option>').join('') + '</select>');
+  switch (CAT.hero) {
+    case 'link':
+    case 'made':
+      h = chan() + field('Language', langSel()) + titleField(CAT.ig ? 'Video description (from the caption)' : null)
+        + dateField() + field('Voice tracks', voices(), { req: false });
+      break;
+    case 'dept':
+      h = field('Language', langSel()) + dateField('Video created date') + field('Voice tracks', voices(), { req: false, wide: true });
+      break;
+    case 'code':
+      h = field('Language', langSel()) + field('Episode number', '<input id="fEp" inputmode="numeric" placeholder="4">')
+        + field('Series name', '<input id="fSeries" placeholder="Realized Beings">', { wide: true })
+        + titleField('Episode title') + field('Voice tracks', voices(), { req: false, wide: true });
+      break;
+    case 'satsang':
+      if (v.kind === 'audio_gm') h += field('Meditation name', '<input id="fStrand" placeholder="Chitshakti">', { wide: true });
+      h += titleField('Title') + field('Language', langSel()) + field('Voice tracks', voices(), { req: false });
+      break;
+    default:
+      h = '<div class="nothing wide"><div><b>Nothing else to fill in.</b><br>A department backup is named from the department and the month only,<br>and has no fixed files inside.</div></div>';
+  }
+  $('fields').innerHTML = h;
+  $('fields').style.flex = CAT.hero === 'backup' ? '1' : '';
+  $('fields').style.display = CAT.hero === 'backup' ? 'flex' : '';
+  $('ftcLine').style.display = CAT.hero === 'backup' ? 'none' : '';
+
+  const bind = (id, key, after) => {
+    const el = $(id);
+    if (!el) return;
+    el.value = v[key];
+    el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => { v[key] = el.value; if (after) after(); update(); });
+  };
+  bind('fChan', 'channel');
+  bind('fLang', 'lang', () => { if (CAT.hero === 'code') $('otp').querySelector('.pre').textContent = 'SGEX' + v.lang; });
+  bind('title', 'title', () => { v.loading = false; syncTitle('title'); });
+  bind('fSeries', 'series');
+  bind('fEp', 'episode', () => { $('fEp').value = $('fEp').value.replace(/\D/g, '').slice(0, 3); v.episode = $('fEp').value; });
+  bind('fStrand', 'strand');
+  if ($('dateBtn')) $('dateBtn').onclick = () => openCal('date', CAT.hero === 'dept' ? 'Video created date' : 'Date translated video was created', false);
+  if ($('voices')) {
+    const set = (n) => { v.voices = Math.max(1, Math.min(12, n)); $('voices').value = v.voices; update(); };
+    $('voices').value = v.voices;
+    $('vMinus').onclick = () => set(v.voices - 1);
+    $('vPlus').onclick = () => set(v.voices + 1);
+    $('voices').oninput = () => set(+$('voices').value || 1);
+  }
+}
+
+/* ------------------------------------------------------------ update */
+function update(popKey) {
+  const v = V();
+  const p = parts();
+  const ready = p.filter((x) => x.ok).length;
+  const done = ready === p.length;
+  const sepOf = (x) => (x.sep === undefined ? '_' : x.sep);
+  const name = p.map((x, i) => (i ? sepOf(x) : '') + x.text).join('');
+
+  $('crumb').innerHTML = 'Create a name <span>&middot; ' + CAT.ref + ' ' + CAT.label + '</span>';
+  $('rail').innerHTML = p.map((x, i) => (i && sepOf(x) ? '<span class="sep">' + sepOf(x) + '</span>' : '')
+    + '<button type="button" class="part ' + (x.loading ? 'loading' : x.ok ? 'c' + (i % 4) : 'todo')
+    + ((popKey === 'code' && x.cap === 'video code') || (popKey === 'title' && x.go === 'title') ? ' pop' : '')
+    + '" data-i="' + i + '"><span class="tok">' + x.text + '</span><span class="cap">' + I.pen + x.cap + '</span></button>').join('');
+  $('rail').querySelectorAll('.part').forEach((b) => { b.onclick = () => goTo(p[+b.dataset.i].go); });
+
+  $('ringFg').style.strokeDashoffset = 194.8 * (1 - ready / p.length);
+  $('ringTxt').textContent = ready + '/' + p.length;
+  $('ring').classList.toggle('done', done);
+
+  const missing = p.filter((x) => !x.ok).map((x) => x.cap === 'from the link' ? 'video code' : x.cap);
+  $('nameFoot').innerHTML = done
+    ? '<span class="pill ok">Spec compliant</span><span>Passes every rule</span><div class="nas">' + I.folder + NAS[CAT.nas] + '/' + name + '</div>'
+    : '<span class="pill" style="background:var(--surface-2);border:1px solid var(--line);color:var(--text-3)">Not ready</span><span>Still needed: ' + missing.join(', ') + '</span>';
+
+  // hero states
+  const hint = $('heroHint');
+  hint.className = 'hero-hint';
+  if (CAT.hero === 'link') {
+    $('linkBox').classList.toggle('ok', !!v.code);
+    if (!v.link.trim()) hint.textContent = CAT.ig ? 'The reel code is read from the link. Add the description from the caption below.' : 'The video code and the English title are read from the link.';
+    else if (!v.code) { hint.className = 'hero-hint bad'; hint.textContent = 'No ' + (CAT.ig ? 'reel' : 'video') + ' code found yet. Paste the whole link, or the bare code.'; }
+    else { hint.className = 'hero-hint ok'; hint.innerHTML = '&check; Code <code>' + v.code + '</code>' + (v.loading ? ' &middot; fetching the title&hellip;' : v.title ? (CAT.ig ? '' : ' &middot; title found') : ''); }
+  } else if (CAT.hero === 'made') {
+    paintBig($('madeBtn'), v.made, false, 'Pick the date the video was made');
+    hint.textContent = 'An unlisted original has no shareable code, so this date is the video code.';
+  } else if (CAT.hero === 'dept') {
+    $('titleBox').classList.toggle('ok', !!slug(v.title));
+    hint.innerHTML = slug(v.title) ? 'Title becomes <code>' + slug(v.title) + '</code>' : 'Use a meaningful English title, not the file name.';
+  } else if (CAT.hero === 'code') {
+    $('otp').classList.toggle('ok', v.excode.length === 4);
+    hint.textContent = 'Exactly 4 digits, from the exclusive video list. Paste works too.';
+  } else if (CAT.hero === 'satsang') {
+    $('kinds').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === v.kind));
+    paintBig($('monthBtn'), v.month, true);
+    hint.textContent = v.kind === 'audio_gm' ? 'Guided meditations also need the meditation name, below.' : 'One folder per item; the month is the satsang month.';
+  } else {
+    paintBig($('monthBtn'), v.month, true);
+    hint.textContent = 'Backups are archived to ' + NAS.dept + '.';
+  }
+
+  if ($('dateBtn')) paintSmall($('dateBtn'), v.date);
+  if ($('slugHint')) $('slugHint').innerHTML = fileBase() && CAT.hero !== 'code' ? 'Becomes <code>' + slug(v.title) + '</code>' : '';
+  if ($('vNote')) {
+    const n = v.voices;
+    $('vNote').innerHTML = (n <= 4 ? Array.from({ length: n }, (_, i) => 'Voice' + (i + 1)) : ['Voice1', '…', 'Voice' + n]).map((s) => '<span>' + s + '</span>').join('') + '<em>' + n + ' WAV file' + (n === 1 ? '' : 's') + '</em>';
+  }
+
+  renderTree(done, name);
+  $('liveBar').classList.toggle('empty', !done);
+  $('liveName').textContent = done ? name : 'No name yet';
+  const nFiles = CAT.noFiles ? 0 : 4 + v.voices;
+  $('sum').innerHTML = done ? 'Ready &middot; <b>1 folder</b>' + (CAT.noFiles ? '' : ', 7 subfolders, ' + nFiles + ' filenames')
+    : '<b>' + ready + ' of ' + p.length + '</b> parts ready &middot; still needed: ' + missing.join(', ');
+  $('btnDisk').disabled = !done;
+}
+
+function paintBig(btn, d, monthOnly, emptyText) {
+  btn.classList.toggle('empty', !d);
+  btn.classList.toggle('ok', !!d);
+  btn.innerHTML = d
+    ? '<span class="ic"><span class="m">' + MON[d.getMonth()] + '</span><span class="d">' + (monthOnly ? String(d.getFullYear()).slice(2) : d.getDate()) + '</span></span>'
+      + '<span><div class="v">' + (monthOnly ? MONTH[d.getMonth()] + ' ' + d.getFullYear() : fmt(d)) + '</div>'
+      + '<div class="s">' + (monthOnly ? 'Goes into the name as <b>' + fmtM(d) + '</b>' : '<b>' + WD[d.getDay()] + '</b> &middot; ' + ago(d)) + '</div></span>'
+      + '<span class="go">Change</span>'
+    : '<span class="ic"><span class="m">&ndash;</span></span><span class="v">' + emptyText + '</span><span class="go">Pick date</span>';
+}
+function paintSmall(btn, d) {
+  btn.innerHTML = '<span class="ic"><span class="m">' + MON[d.getMonth()] + '</span><span class="d">' + d.getDate() + '</span></span>'
+    + '<span><div class="v">' + fmt(d) + '</div><div class="s"><b>' + WD[d.getDay()] + '</b> &middot; ' + ago(d) + '</div></span>' + I.cal;
+}
+
+function renderTree(done, name) {
+  const v = V();
+  if (CAT.noFiles) {
+    $('filesTitle').textContent = 'What will be made · 1 folder';
+    $('tree').innerHTML = '<div class="tree-row folder root">' + I.folder + '<span class="n">' + name + '/</span></div>'
+      + '<div class="nothing" style="margin-top:10px;min-height:150px"><div>No subfolders or fixed files.<br>Copy the department’s files into this one folder.</div></div>';
+    return;
+  }
+  const base = fileBase();
+  const n = base || '…';
+  const l = v.lang;
+  const groups = [
+    ['Video Output', [['Output_' + n + '_' + l + '.mp4', 1], ['FB-Output_' + n + '_' + l + '.mp4', 0]]],
+    ['Audio Output', Array.from({ length: v.voices }, (_, i) => ['Voice' + (i + 1) + '_' + n + '_' + l + '.wav', 0])],
+    ['SRT_Transcript', [['Script_' + n + '_' + l + '.docx', 0], ['Subtitles_' + n + '_' + l + '.srt', 0]]],
+    ['Audio Project', []], ['Video Project', []], ['Common files', []], ['Fonts', []],
+  ];
+  $('filesTitle').textContent = 'What will be made · ' + groups.reduce((a, g) => a + g[1].length, 0) + ' files';
+  let h = '<div class="tree-row folder root">' + I.folder + '<span class="n">' + (done ? name : 'Your folder') + '/</span></div>';
+  groups.forEach(([g, fs]) => {
+    h += '<div class="tree-row folder i1">' + I.folder + g + '/' + (fs.length ? '' : '<span class="tag">empty</span>') + '</div>';
+    fs.forEach(([f, must]) => {
+      h += '<div class="tree-row file i2">' + I.file + (base ? '<span class="n">' + f + '</span>' : '<span class="skel"></span>')
+        + '<span class="tag"><span class="file-tag ' + (must ? 'must' : 'opt') + '">' + (must ? 'required' : 'optional') + '</span></span></div>';
+    });
+  });
+  $('tree').innerHTML = h;
+}
+
+function goTo(where) {
+  const map = { channel: 'fChan', lang: 'fLang', title: $('hTitle') ? 'hTitle' : 'title', series: 'fSeries', strand: 'fStrand' };
+  if (where === 'date') return openCal('date', 'Date translated video was created', false);
+  if (where === 'hero') {
+    if ($('link')) return $('link').focus();
+    if ($('madeBtn')) return $('madeBtn').click();
+    if ($('otp')) return $('otp').querySelector('input').focus();
+    if ($('monthBtn') && CAT.hero !== 'dept') return $('monthBtn').click();
+    if ($('hDept')) return $('hDept').focus();
+    return;
+  }
+  const el = $(map[where]);
+  if (el) { el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+}
+
+/* ------------------------------------------------------------ categories */
+function renderCats() {
+  $('cats').innerHTML = CATS.map((c) => '<button data-id="' + c.id + '" class="' + (c === CAT ? 'on' : '') + '"><b>' + c.ref + '</b>' + c.tab + '</button>').join('');
+  $('cats').querySelectorAll('button').forEach((b) => { b.onclick = () => select(b.dataset.id); });
+}
+function select(id) {
+  CAT = CATS.find((c) => c.id === id);
+  renderCats();
+  renderHero();
+  renderFields();
+  update();
+}
+
+function fillExample() {
+  const v = V();
+  clearTimeout(lookupTimer);
+  Object.assign(v, blank(CAT), CAT.example);
+  if (CAT.hero === 'link') v.code = codeFrom(v.link);
+  renderHero(); renderFields(); update();
+}
+$('mkFill').onclick = fillExample;
+$('mkEmpty').onclick = () => { clearTimeout(lookupTimer); STATE[CAT.id] = blank(CAT); renderHero(); renderFields(); update(); };
+$('btnClear').onclick = $('mkEmpty').onclick;
+
+/* ================================================================ calendar
+   Centered dialog. Dates or months; nothing changes until "Use this". */
+let C = null;
+
+function openCal(key, label, monthOnly) {
+  const v = V();
+  const start = v[key] || (monthOnly ? THIS_MONTH : TODAY);
+  C = { key, monthOnly, pick: start, cursor: start, view: monthOnly ? 'months' : 'days', back: document.activeElement };
+  const quick = monthOnly
+    ? [['This month', 0], ['Last month', -1], ['2 months ago', -2], ['3 months ago', -3]]
+    : [['Today', 0], ['Yesterday', -1], ['1 week ago', -7], ['1 month ago', -30]];
+  const scrim = document.createElement('div');
+  scrim.className = 'scrim';
+  scrim.id = 'scrim';
+  scrim.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-label="' + label + '">'
+    + '<div class="dlg-side"><div class="lbl">Selected</div><div class="big-date" id="bigDate"></div><div class="as" id="asName"></div>'
+    + '<div class="quick" id="quick">' + quick.map((q) => '<button data-q="' + q[1] + '">' + q[0] + '<span></span></button>').join('') + '</div></div>'
+    + '<div class="dlg-main"><div class="dlg-top"><h3>' + label + '</h3><button class="icon-btn" id="calX" aria-label="Close">' + I.x + '</button></div>'
+    + (monthOnly ? '' : '<div class="typein">' + I.kb + '<input id="calType" placeholder="Type a date: 12/3/21, 12 Mar 2021, today" autocomplete="off" spellcheck="false"></div><div class="parse" id="calParse"></div>')
+    + '<div class="cal-hd" id="calHd"></div><div class="cal-body" id="calBody" tabindex="0"></div>'
+    + '<div class="dlg-ft"><div class="keys">' + (monthOnly ? 'Pick a month' : '<span class="kbd">&larr;&rarr;&uarr;&darr;</span> move <span class="kbd">PgUp</span><span class="kbd">PgDn</span> month <span class="kbd">T</span> today') + '</div>'
+    + '<button class="ghost" id="calCancel">Cancel</button><button class="primary" id="calOk">Use this ' + (monthOnly ? 'month' : 'date') + '</button></div></div></div>';
+  document.body.appendChild(scrim);
+  document.body.style.overflow = 'hidden';
+  scrim.addEventListener('mousedown', (e) => { if (e.target === scrim) closeCal(); });
+  scrim.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeCal(); } });
+  $('calX').onclick = closeCal;
+  $('calCancel').onclick = closeCal;
+  $('calOk').onclick = () => { V()[C.key] = C.pick; closeCal(); update(); };
+  $('quick').querySelectorAll('button').forEach((b) => {
+    b.onclick = () => { const d = monthOnly ? addMonths(THIS_MONTH, +b.dataset.q) : addDays(TODAY, +b.dataset.q); C.pick = C.cursor = d; if (!monthOnly) C.view = 'days'; renderCal('zm'); };
+  });
+  if ($('calType')) {
+    $('calType').addEventListener('input', onCalType);
+    $('calType').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const d = parseDate(e.target.value); if (d && d <= TODAY) { C.pick = d; $('calOk').click(); } } });
+  }
+  $('calBody').addEventListener('keydown', onCalKey);
+  renderCal();
+  $('calBody').focus();
+}
+function closeCal() {
+  const s = $('scrim');
+  if (s) s.remove();
+  document.body.style.overflow = '';
+  if (C && C.back && C.back.isConnected) C.back.focus();
+  C = null;
+}
+function onCalType(e) {
+  const out = $('calParse');
+  const raw = e.target.value;
+  const d = parseDate(raw);
+  out.className = 'parse' + (!raw.trim() ? '' : d && d <= TODAY ? ' ok' : ' bad');
+  if (!raw.trim()) { out.textContent = ''; return; }
+  if (!d) { out.innerHTML = 'Can’t read that yet. Try <code>12/03/2021</code>'; return; }
+  if (d > TODAY) { out.innerHTML = '<code>' + fmt(d) + '</code> is in the future'; return; }
+  out.innerHTML = '↵ Enter to use <code>' + fmt(d) + '</code>';
+  const moved = d.getMonth() !== C.cursor.getMonth() || d.getFullYear() !== C.cursor.getFullYear();
+  const dir = d < C.cursor ? 'sr' : 'sl';
+  C.pick = C.cursor = d; C.view = 'days';
+  renderCal(moved ? dir : null);
+}
+function onCalKey(e) {
+  if (C.monthOnly) { if (e.key === 'Enter') { e.preventDefault(); $('calOk').click(); } return; }
+  if (/^[0-9]$/.test(e.key) && $('calType')) { e.preventDefault(); const i = $('calType'); i.focus(); i.value += e.key; onCalType({ target: i }); return; }
+  if (e.key === 'Escape' && C.view !== 'days') { e.preventDefault(); e.stopPropagation(); C.view = 'days'; renderCal('zm'); return; }
+  if (C.view !== 'days') return;
+  const c = C.cursor;
+  let n;
+  switch (e.key) {
+    case 'ArrowLeft': n = addDays(c, -1); break;
+    case 'ArrowRight': n = addDays(c, 1); break;
+    case 'ArrowUp': n = addDays(c, -7); break;
+    case 'ArrowDown': n = addDays(c, 7); break;
+    case 'PageUp': n = addMonths(c, e.shiftKey ? -12 : -1); break;
+    case 'PageDown': n = addMonths(c, e.shiftKey ? 12 : 1); break;
+    case 't': case 'T': n = TODAY; break;
+    case 'Enter': e.preventDefault(); $('calOk').click(); return;
+    default: return;
+  }
+  e.preventDefault();
+  n = past(n);
+  const moved = n.getMonth() !== c.getMonth() || n.getFullYear() !== c.getFullYear();
+  C.cursor = C.pick = n;
+  renderCal(moved ? (n < c ? 'sr' : 'sl') : null);
+}
+function renderCal(anim) {
+  const { cursor, pick, view, monthOnly } = C;
+  const y = cursor.getFullYear();
+  const m = cursor.getMonth();
+
+  $('bigDate').innerHTML = monthOnly
+    ? '<div class="d" style="font-size:30px">' + MON[pick.getMonth()] + '</div><div class="my">' + pick.getFullYear() + '</div>'
+    : '<div class="d">' + pad(pick.getDate()) + '</div><div class="my">' + MON[pick.getMonth()] + ' ' + pick.getFullYear() + '</div><div class="wd">' + WD[pick.getDay()] + ' &middot; ' + ago(pick) + '</div>';
+  $('asName').innerHTML = 'Goes into the name as<br><code>' + (monthOnly ? fmtM(pick) : fmt(pick)) + '</code>';
+  $('quick').querySelectorAll('button').forEach((b) => {
+    const d = monthOnly ? addMonths(THIS_MONTH, +b.dataset.q) : addDays(TODAY, +b.dataset.q);
+    b.querySelector('span').textContent = monthOnly ? fmtM(d) : pad(d.getDate()) + '-' + MON[d.getMonth()];
+    b.classList.toggle('on', same(d, pick));
+  });
+
+  let title, atEnd;
+  if (view === 'days') {
+    title = '<button data-v="months">' + MONTH[m] + I.down + '</button><button class="yr" data-v="years">' + y + I.down + '</button>';
+    atEnd = y === TODAY.getFullYear() && m === TODAY.getMonth();
+  } else if (view === 'months') {
+    title = '<button class="yr' + (monthOnly ? '' : ' on') + '" data-v="years">' + y + I.down + '</button>';
+    atEnd = y >= TODAY.getFullYear();
+  } else {
+    const s = y - (y % 12);
+    title = '<button class="yr on" data-v="' + (monthOnly ? 'months' : 'days') + '">' + s + ' &ndash; ' + (s + 11) + '</button>';
+    atEnd = s + 11 >= TODAY.getFullYear();
+  }
+  $('calHd').innerHTML = '<div class="t">' + title + '</div><button class="calnav" data-s="-1" aria-label="Previous">' + I.left + '</button><button class="calnav" data-s="1" aria-label="Next"' + (atEnd ? ' disabled' : '') + '>' + I.right + '</button>';
+  $('calHd').querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => { C.view = b.dataset.v; renderCal('zm'); }; });
+  $('calHd').querySelectorAll('[data-s]').forEach((b) => {
+    b.onclick = () => { const s = +b.dataset.s; C.cursor = past(addMonths(C.cursor, s * { days: 1, months: 12, years: 144 }[C.view])); renderCal(s < 0 ? 'sr' : 'sl'); };
+  });
+
+  let h = '';
+  if (view === 'days') {
+    h = '<div class="dow">' + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => '<span>' + d + '</span>').join('') + '</div><div class="days">';
+    const first = mk(y, m, 1);
+    let d = addDays(first, -first.getDay());
+    for (let i = 0; i < 42; i++, d = addDays(d, 1)) {
+      const cls = ['day'];
+      if (d.getMonth() !== m) cls.push('other');
+      if (d.getDay() === 0) cls.push('sun');
+      if (same(d, TODAY)) cls.push('today');
+      if (same(d, pick)) cls.push('sel');
+      if (same(d, cursor)) cls.push('cursor');
+      h += '<button tabindex="-1" class="' + cls.join(' ') + '" data-t="' + d.getTime() + '"' + (d > TODAY ? ' disabled' : '') + '>' + d.getDate() + '</button>';
+    }
+    h += '</div>';
+  } else if (view === 'months') {
+    h = '<div class="g12">' + MON.map((n, i) => '<button tabindex="-1" class="cell' + (pick.getFullYear() === y && pick.getMonth() === i ? ' sel' : TODAY.getFullYear() === y && TODAY.getMonth() === i ? ' now' : '')
+      + '" data-m="' + i + '"' + (mk(y, i, 1) > TODAY ? ' disabled' : '') + '>' + n + '</button>').join('') + '</div>';
+  } else {
+    const s = y - (y % 12);
+    h = '<div class="g12">' + Array.from({ length: 12 }, (_, i) => s + i).map((yy) => '<button tabindex="-1" class="cell yr'
+      + (pick.getFullYear() === yy ? ' sel' : TODAY.getFullYear() === yy ? ' now' : '') + '" data-y="' + yy + '"'
+      + (yy > TODAY.getFullYear() ? ' disabled' : '') + '>' + yy + '</button>').join('') + '</div>';
+  }
+  const body = $('calBody');
+  body.innerHTML = h;
+  if (anim) body.lastElementChild.classList.add(anim);
+  body.querySelectorAll('.day:not(:disabled)').forEach((b) => {
+    b.onclick = () => { C.pick = C.cursor = new Date(+b.dataset.t); renderCal(); };
+    b.ondblclick = () => $('calOk').click();
+  });
+  body.querySelectorAll('[data-m]').forEach((b) => {
+    b.onclick = () => {
+      if (monthOnly) { C.pick = C.cursor = mk(y, +b.dataset.m, 1); renderCal(); return; }
+      C.cursor = past(addMonths(cursor, +b.dataset.m - m)); C.view = 'days'; renderCal('zm');
+    };
+    if (monthOnly) b.ondblclick = () => $('calOk').click();
+  });
+  body.querySelectorAll('[data-y]').forEach((b) => { b.onclick = () => { C.cursor = past(addMonths(cursor, 12 * (+b.dataset.y - y))); C.view = 'months'; renderCal('zm'); }; });
+  if (!$('calType') || document.activeElement !== $('calType')) body.focus();
+}
+
+select('dubbed_yt');
+</script>
+</body>
+</html>

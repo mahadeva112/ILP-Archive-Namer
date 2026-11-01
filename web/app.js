@@ -91,7 +91,7 @@ function wireChrome() {
       b.classList.add('on');
       const tree = b.dataset.view === 'tree';
       $('outTree').style.display = tree ? 'block' : 'none';
-      $('outFiles').style.display = tree ? 'none' : 'block';
+      $('outFiles').style.display = tree ? 'none' : '';
     };
   });
 
@@ -268,9 +268,9 @@ function buildField(f, v) {
     el.value = v[f.key] || 'hin';
     v[f.key] = el.value;
   } else if (f.type === 'date') {
-    el = document.createElement('input');
-    el.type = 'date';
-    el.value = v[f.key] || '';
+    // A button, not an input: it fires 'input' itself when a date is picked,
+    // so the shared onInput below needs no special case.
+    el = datePicker(v[f.key], f.label);
   } else if (f.type === 'month') {
     el = document.createElement('input');
     el.type = 'month';
@@ -309,6 +309,8 @@ function buildField(f, v) {
   wrap.appendChild(el);
 
   /* -------- per-type extras -------- */
+  if (f.type === 'number') stepper(el, wrap);
+
   if (f.type === 'lang') {
     const h = document.createElement('div');
     h.className = 'hint';
@@ -353,6 +355,50 @@ function buildField(f, v) {
   }
 
   return wrap;
+}
+
+/* The voice count is a small number picked often, so it gets - / + buttons
+   and a preview of the WAV names instead of a full-width text box. */
+function stepper(el, wrap) {
+  const min = +el.min;
+  const max = +el.max;
+  const row = document.createElement('div');
+  row.className = 'stepper-row';
+  const box = document.createElement('div');
+  box.className = 'stepper';
+  const note = document.createElement('div');
+  note.className = 'stepper-note';
+
+  const btn = (text, step, label) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    b.setAttribute('aria-label', label);
+    b.onclick = () => {
+      el.value = Math.min(max, Math.max(min, (+el.value || min) + step));
+      el.dispatchEvent(new Event('input'));
+    };
+    return b;
+  };
+  const minus = btn('−', -1, 'One fewer');
+  const plus = btn('+', 1, 'One more');
+
+  const paint = () => {
+    const n = Math.min(max, Math.max(min, +el.value || min));
+    minus.disabled = n <= min;
+    plus.disabled = n >= max;
+    const names = n <= 4
+      ? Array.from({ length: n }, (_, i) => 'Voice' + (i + 1))
+      : ['Voice1', '…', 'Voice' + n];
+    note.innerHTML = names.map((s) => '<span>' + s + '</span>').join('')
+      + '<em>' + n + ' WAV file' + (n === 1 ? '' : 's') + '</em>';
+  };
+  el.addEventListener('input', paint);
+
+  box.append(minus, el, plus);
+  row.append(box, note);
+  wrap.appendChild(row);
+  paint();
 }
 
 function updateLangHint(code) {
@@ -425,6 +471,409 @@ async function lookup(raw, inputEl, statusEl) {
     ? (bits.length ? '<br>' : '') + esc(data.note) : '');
 
   build();
+}
+
+/* ----------------------------------------------------- date picker
+   A dialog centered in the window, so it is fully visible wherever the field
+   sits and never needs a scroll. Browsing changes nothing until the date is
+   confirmed. Values in and out are ISO yyyy-mm-dd, exactly what
+   <input type="date"> gave, so the engine sees no difference. Archive dates
+   are never in the future, so future days cannot be picked. */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+  'August', 'September', 'October', 'November', 'December'];
+const WEEKDAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+  'Friday', 'Saturday'];
+
+const DP_ICON = {
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  kb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10"/></svg>',
+};
+
+let DP = null;   // the open dialog: { trigger, scrim, pop, pick, cursor, view }
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const mkDate = (y, m, d) => new Date(y, m, d);
+const toIso = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+const fmtDate = (d) => pad2(d.getDate()) + '-' + MON[d.getMonth()] + '-' + d.getFullYear();
+const sameDay = (a, b) => !!a && !!b && a.getTime() === b.getTime();
+const addDays = (d, n) => mkDate(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+function addMonths(d, n) {
+  const first = mkDate(d.getFullYear(), d.getMonth() + n, 1);
+  const last = mkDate(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return mkDate(first.getFullYear(), first.getMonth(), Math.min(d.getDate(), last));
+}
+
+// Read fresh each time: the app can stay open past midnight.
+function today() {
+  const t = new Date();
+  return mkDate(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+const notFuture = (d) => (d > today() ? today() : d);
+
+function fromIso(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+  return m ? mkDate(+m[1], +m[2] - 1, +m[3]) : null;
+}
+
+function agoText(d) {
+  const days = Math.round((today() - d) / 864e5);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 14) return days + ' days ago';
+  if (days < 60) return Math.round(days / 7) + ' weeks ago';
+  if (days < 730) return Math.round(days / 30.44) + ' months ago';
+  return Math.floor(days / 365.25) + ' years ago';
+}
+
+/* Typed dates are read day first, the way they are written here:
+   12/3/21, 12-03-2021, 12 Mar 2021, 12mar21, 2021-03-12, today, yesterday. */
+function parseTyped(raw) {
+  const s = raw.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!s) return null;
+  if (s === 'today') return today();
+  if (s === 'yesterday') return addDays(today(), -1);
+  let y; let m; let d; let x;
+  if ((x = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/))) {
+    [y, m, d] = [+x[1], +x[2], +x[3]];
+  } else if ((x = s.match(/^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{2}|\d{4})$/))) {
+    [d, m, y] = [+x[1], +x[2], +x[3]];
+  } else if ((x = s.match(/^(\d{1,2})[-/. ]?([a-z]{3,9})[-/., ]*(\d{2}|\d{4})$/))) {
+    const i = MON.findIndex((n) => x[2].startsWith(n.toLowerCase()));
+    if (i < 0) return null;
+    [d, m, y] = [+x[1], i + 1, +x[3]];
+  } else if ((x = s.match(/^(\d{2})(\d{2})(\d{4})$/))) {
+    [d, m, y] = [+x[1], +x[2], +x[3]];
+  } else {
+    return null;
+  }
+  if (y < 100) y += 2000;
+  const r = mkDate(y, m - 1, d);
+  return (r.getMonth() === m - 1 && r.getDate() === d) ? r : null;
+}
+
+function datePicker(iso, label) {
+  const t = document.createElement('button');
+  t.type = 'button';
+  t.className = 'dp-trigger';
+  t.setAttribute('aria-haspopup', 'dialog');
+  t.dataset.label = label || 'Pick a date';
+  t.value = iso || '';
+  paintTrigger(t);
+  t.addEventListener('click', () => openPicker(t));
+  return t;
+}
+
+function paintTrigger(t) {
+  const d = fromIso(t.value);
+  t.classList.toggle('empty', !d);
+  t.innerHTML = d
+    ? '<span class="dp-ico"><span class="m">' + MON[d.getMonth()] + '</span>'
+      + '<span class="d">' + d.getDate() + '</span></span>'
+      + '<span class="dp-main"><div class="dp-val">' + fmtDate(d) + '</div>'
+      + '<div class="dp-sub"><b>' + WEEKDAY[d.getDay()] + '</b> &middot; '
+      + agoText(d) + '</div></span>'
+    : '<span class="dp-ico"><span class="m">&ndash;</span></span>'
+      + '<span class="dp-main"><div class="dp-val">Pick a date</div></span>';
+  t.insertAdjacentHTML('beforeend', DP_ICON.chev.replace('<svg', '<svg class="dp-chev"'));
+}
+
+function openPicker(t) {
+  closePicker();
+  const scrim = document.createElement('div');
+  scrim.className = 'dp-scrim';
+  scrim.innerHTML =
+    '<div class="dp-pop" role="dialog" aria-modal="true">'
+    + '<div class="dp-side">'
+      + '<div class="dp-lbl">Selected</div>'
+      + '<div class="dp-big"></div>'
+      + '<div class="dp-out"></div>'
+      + '<div class="dp-quick">'
+        + '<button type="button" data-days="0">Today</button>'
+        + '<button type="button" data-days="-1">Yesterday</button>'
+        + '<button type="button" data-days="-7">1 week ago</button>'
+        + '<button type="button" data-days="-30">1 month ago</button>'
+      + '</div>'
+    + '</div>'
+    + '<div class="dp-cal">'
+      + '<div class="dp-top"><h3></h3>'
+        + '<button type="button" class="icon-btn dp-x" aria-label="Close">' + DP_ICON.close + '</button></div>'
+      + '<div class="dp-type">' + DP_ICON.kb
+        + '<input placeholder="Type a date: 12/3/21, 12 Mar 2021, today"'
+        + ' spellcheck="false" autocomplete="off"></div>'
+      + '<div class="dp-parse"></div>'
+      + '<div class="dp-hd"></div>'
+      + '<div class="dp-body" tabindex="0" role="grid"></div>'
+      + '<div class="dp-ft">'
+        + '<span class="dp-keys"><span class="kbd">&larr;&rarr;&uarr;&darr;</span> move '
+        + '<span class="kbd">PgUp</span><span class="kbd">PgDn</span> month '
+        + '<span class="kbd">T</span> today</span>'
+        + '<button type="button" class="ghost dp-cancel">Cancel</button>'
+        + '<button type="button" class="primary dp-ok">Use this date</button>'
+      + '</div>'
+    + '</div>'
+  + '</div>';
+  const pop = scrim.firstElementChild;
+  pop.setAttribute('aria-label', t.dataset.label);
+  pop.querySelector('h3').textContent = t.dataset.label;
+  document.body.appendChild(scrim);
+  document.body.classList.add('dp-lock');
+  t.classList.add('open');
+
+  const start = fromIso(t.value) || today();
+  DP = { trigger: t, scrim, pop, pick: start, cursor: start, view: 'days' };
+  markSegment(t.dataset.key, true);
+
+  // Keys never reach the screen-switching shortcuts while the dialog is up.
+  scrim.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Escape') { e.preventDefault(); closePicker(true); }
+    if (e.key === 'Tab') trapTab(e);
+  });
+  scrim.addEventListener('mousedown', (e) => { if (e.target === scrim) closePicker(true); });
+
+  const input = pop.querySelector('input');
+  const body = pop.querySelector('.dp-body');
+  input.addEventListener('input', () => onPickerType(input.value));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const d = parseTyped(input.value);
+      if (d && d <= today()) pickDate(d);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      body.focus();
+    }
+  });
+  pop.querySelectorAll('[data-days]').forEach((b) => {
+    b.onclick = () => choose(addDays(today(), +b.dataset.days), 'dp-zoom');
+  });
+  pop.querySelector('.dp-x').onclick = () => closePicker(true);
+  pop.querySelector('.dp-cancel').onclick = () => closePicker(true);
+  pop.querySelector('.dp-ok').onclick = () => pickDate(DP.pick);
+  body.addEventListener('keydown', onPickerKey);
+
+  renderPicker();
+  body.focus();
+}
+
+function trapTab(e) {
+  const els = [...DP.pop.querySelectorAll('button:not(:disabled), input, [tabindex="0"]')]
+    .filter((x) => x.tabIndex >= 0);
+  const first = els[0];
+  const last = els[els.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function closePicker(refocus) {
+  if (!DP) return;
+  const { trigger, scrim } = DP;
+  scrim.remove();
+  document.body.classList.remove('dp-lock');
+  trigger.classList.remove('open');
+  markSegment(trigger.dataset.key, false);
+  DP = null;
+  if (refocus && trigger.isConnected) trigger.focus();
+}
+
+// Select without closing: the dialog waits for "Use this date".
+function choose(d, anim) {
+  if (d > today()) return;
+  const c = DP.cursor;
+  const moved = d.getMonth() !== c.getMonth() || d.getFullYear() !== c.getFullYear();
+  DP.pick = d;
+  DP.cursor = d;
+  DP.view = 'days';
+  renderPicker(anim || (moved ? (d < c ? 'dp-slide-r' : 'dp-slide-l') : null));
+}
+
+function pickDate(d) {
+  if (d > today()) return;
+  const t = DP.trigger;
+  t.value = toIso(d);
+  paintTrigger(t);
+  closePicker(true);
+  t.dispatchEvent(new Event('input'));
+}
+
+function markSegment(key, on) {
+  document.querySelectorAll('#outSegments .seg[data-field="' + key + '"]')
+    .forEach((s) => s.classList.toggle('dp-hot', on));
+}
+
+function onPickerType(raw) {
+  const out = DP.pop.querySelector('.dp-parse');
+  const d = parseTyped(raw);
+  out.className = 'dp-parse' + (!raw.trim() ? '' : d && d <= today() ? ' ok' : ' bad');
+  if (!raw.trim()) {
+    out.textContent = '';
+  } else if (!d) {
+    out.innerHTML = 'Can&rsquo;t read that yet. Try <code>12/03/2021</code> or <code>12 Mar 2021</code>';
+  } else if (d > today()) {
+    out.innerHTML = '<code>' + fmtDate(d) + '</code> is in the future';
+  } else {
+    out.innerHTML = '&#8629; Enter to use <code>' + fmtDate(d) + '</code> &middot; '
+      + WEEKDAY[d.getDay()];
+    choose(d);
+  }
+}
+
+function onPickerKey(e) {
+  if (/^[0-9]$/.test(e.key)) {
+    e.preventDefault();
+    const input = DP.pop.querySelector('input');
+    input.focus();
+    input.value += e.key;
+    onPickerType(input.value);
+    return;
+  }
+  if (e.key === 'Escape' && DP.view !== 'days') {
+    e.preventDefault();
+    e.stopPropagation();          // back to the days, not out of the dialog
+    DP.view = 'days';
+    renderPicker('dp-zoom');
+    return;
+  }
+  if (DP.view !== 'days') return;
+
+  const c = DP.cursor;
+  let n;
+  switch (e.key) {
+    case 'ArrowLeft': n = addDays(c, -1); break;
+    case 'ArrowRight': n = addDays(c, 1); break;
+    case 'ArrowUp': n = addDays(c, -7); break;
+    case 'ArrowDown': n = addDays(c, 7); break;
+    case 'Home': n = addDays(c, -c.getDay()); break;
+    case 'End': n = addDays(c, 6 - c.getDay()); break;
+    case 'PageUp': n = addMonths(c, e.shiftKey ? -12 : -1); break;
+    case 'PageDown': n = addMonths(c, e.shiftKey ? 12 : 1); break;
+    case 't': case 'T': n = today(); break;
+    case 'Enter': case ' ': e.preventDefault(); pickDate(DP.pick); return;
+    default: return;
+  }
+  e.preventDefault();
+  choose(notFuture(n));
+}
+
+function renderPicker(anim) {
+  const { pop, cursor, view } = DP;
+  const sel = DP.pick;
+  const now = today();
+  const y = cursor.getFullYear();
+  const m = cursor.getMonth();
+  const hd = pop.querySelector('.dp-hd');
+  const body = pop.querySelector('.dp-body');
+
+  // Header: the month and year are buttons into the coarser grids.
+  let title;
+  let atEnd;
+  if (view === 'days') {
+    title = '<button type="button" data-dpview="months">' + MONTH[m] + DP_ICON.chev + '</button>'
+      + '<button type="button" class="yr" data-dpview="years">' + y + DP_ICON.chev + '</button>';
+    atEnd = y === now.getFullYear() && m === now.getMonth();
+  } else if (view === 'months') {
+    title = '<button type="button" class="yr on" data-dpview="years">' + y + DP_ICON.chev + '</button>';
+    atEnd = y >= now.getFullYear();
+  } else {
+    const s = y - (y % 12);
+    title = '<button type="button" class="yr on" data-dpview="days">' + s + ' &ndash; ' + (s + 11) + '</button>';
+    atEnd = s + 11 >= now.getFullYear();
+  }
+  hd.innerHTML = '<div class="dp-title">' + title + '</div>'
+    + '<button type="button" class="dp-step" data-step="-1" aria-label="Previous">' + DP_ICON.left + '</button>'
+    + '<button type="button" class="dp-step" data-step="1" aria-label="Next"'
+    + (atEnd ? ' disabled' : '') + '>' + DP_ICON.right + '</button>';
+  hd.querySelectorAll('[data-dpview]').forEach((b) => {
+    b.onclick = () => { DP.view = b.dataset.dpview; renderPicker('dp-zoom'); };
+  });
+  hd.querySelectorAll('[data-step]').forEach((b) => {
+    b.onclick = () => {
+      const step = +b.dataset.step;
+      const months = { days: 1, months: 12, years: 144 }[DP.view];
+      DP.cursor = notFuture(addMonths(DP.cursor, step * months));
+      renderPicker(step < 0 ? 'dp-slide-r' : 'dp-slide-l');
+    };
+  });
+
+  let html = '';
+  if (view === 'days') {
+    html += '<div class="dp-dow">'
+      + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => '<span>' + d + '</span>').join('')
+      + '</div><div class="dp-days">';
+    const first = mkDate(y, m, 1);
+    let d = addDays(first, -first.getDay());
+    for (let i = 0; i < 42; i++, d = addDays(d, 1)) {
+      const cls = ['dp-day'];
+      if (d.getMonth() !== m) cls.push('other');
+      if (d.getDay() === 0) cls.push('sun');
+      if (sameDay(d, now)) cls.push('today');
+      if (sameDay(d, sel)) cls.push('sel');
+      if (sameDay(d, cursor)) cls.push('cursor');
+      html += '<button type="button" tabindex="-1" class="' + cls.join(' ') + '" data-iso="' + toIso(d) + '"'
+        + (d > now
+          ? ' disabled title="Archive dates cannot be in the future"'
+          : ' title="' + WEEKDAY[d.getDay()] + ', ' + fmtDate(d) + '"')
+        + ' aria-selected="' + sameDay(d, sel) + '">' + d.getDate() + '</button>';
+    }
+    html += '</div>';
+  } else if (view === 'months') {
+    html += '<div class="dp-grid">' + MON.map((n, i) => {
+      let cls = 'dp-cell';
+      if (sel && sel.getFullYear() === y && sel.getMonth() === i) cls += ' sel';
+      else if (now.getFullYear() === y && now.getMonth() === i) cls += ' now';
+      return '<button type="button" tabindex="-1" class="' + cls + '" data-month="' + i + '"'
+        + (mkDate(y, i, 1) > now ? ' disabled' : '') + '>' + n + '</button>';
+    }).join('') + '</div>';
+  } else {
+    const s = y - (y % 12);
+    html += '<div class="dp-grid">' + Array.from({ length: 12 }, (_, i) => s + i).map((yy) => {
+      let cls = 'dp-cell yr';
+      if (sel && sel.getFullYear() === yy) cls += ' sel';
+      else if (now.getFullYear() === yy) cls += ' now';
+      return '<button type="button" tabindex="-1" class="' + cls + '" data-year="' + yy + '"'
+        + (yy > now.getFullYear() ? ' disabled' : '') + '>' + yy + '</button>';
+    }).join('') + '</div>';
+  }
+  body.innerHTML = html;
+  if (anim) body.lastElementChild.classList.add(anim);
+
+  body.querySelectorAll('.dp-day:not(:disabled)').forEach((b) => {
+    b.onclick = () => choose(fromIso(b.dataset.iso));
+    b.ondblclick = () => pickDate(fromIso(b.dataset.iso));
+  });
+  body.querySelectorAll('[data-month]').forEach((b) => {
+    b.onclick = () => {
+      DP.cursor = notFuture(addMonths(cursor, +b.dataset.month - m));
+      DP.view = 'days';
+      renderPicker('dp-zoom');
+    };
+  });
+  body.querySelectorAll('[data-year]').forEach((b) => {
+    b.onclick = () => {
+      DP.cursor = notFuture(addMonths(cursor, 12 * (+b.dataset.year - y)));
+      DP.view = 'months';
+      renderPicker('dp-zoom');
+    };
+  });
+
+  pop.querySelectorAll('[data-days]').forEach((b) => {
+    const d = addDays(now, +b.dataset.days);
+    b.innerHTML = b.textContent.replace(/\d{2}-\w{3}$/, '')
+      + '<span>' + pad2(d.getDate()) + '-' + MON[d.getMonth()] + '</span>';
+    b.classList.toggle('on', sameDay(d, sel));
+  });
+  pop.querySelector('.dp-big').innerHTML = '<div class="d">' + pad2(sel.getDate()) + '</div>'
+    + '<div class="my">' + MON[sel.getMonth()] + ' ' + sel.getFullYear() + '</div>'
+    + '<div class="wd">' + WEEKDAY[sel.getDay()] + ' &middot; ' + agoText(sel) + '</div>';
+  pop.querySelector('.dp-out').innerHTML = 'Goes into the name as<code>' + fmtDate(sel) + '</code>';
+  if (document.activeElement !== pop.querySelector('input')) body.focus();
 }
 
 /* ----------------------------------------------------------- build */
@@ -549,11 +998,15 @@ function renderSegments(host, segments, folder, clickable) {
     el.innerHTML = '<span class="tok">' + esc(s.text) + '</span>'
       + '<span class="cap">' + esc(s.label) + '</span>';
     el.title = s.note || (s.label + ': ' + s.text);
+    if (s.field) el.dataset.field = s.field;
     if (canFocus) {
       el.type = 'button';
       el.onclick = () => {
         const f = document.querySelector('#form [data-key="' + s.field + '"]');
-        if (f) { f.focus(); f.scrollIntoView({ block: 'center' }); }
+        if (!f) return;
+        f.focus();
+        f.scrollIntoView({ block: 'center' });
+        if (f.classList.contains('dp-trigger')) f.click();
       };
     }
     host.appendChild(el);
@@ -685,7 +1138,7 @@ function renderFiles(res) {
     return;
   }
 
-  $('filesCard').style.display = 'block';
+  $('filesCard').style.display = '';     // flex, from styles.css
   $('filesTitle').textContent = 'What goes inside · ' + res.files.length
     + ' file' + (res.files.length === 1 ? '' : 's');
 

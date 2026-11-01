@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Date Picker Mockup</title>
+<!-- Static design mockup: a calendar date picker to replace the native
+     <input type="date">. Uses the same tokens as styles.css. Not served. -->
+<style>
+/* ============================================================== tokens */
+:root {
+  --bg:        #0d0c0b;
+  --surface:   #161412;
+  --surface-2: #1d1b18;
+  --surface-3: #252220;
+  --line:      #2e2a26;
+  --line-soft: #211e1c;
+
+  --text:      #f2f0ee;
+  --text-2:    #c3beb8;
+  --text-3:    #8d8781;
+
+  --accent:    #e0885f;
+  --accent-2:  #cbab78;
+  --ok:        #66c79a;
+  --warn:      #e3b656;
+  --bad:       #f06a78;
+
+  --accent-bg: rgba(224, 136, 95, .14);
+  --accent-ln: rgba(224, 136, 95, .38);
+  --sand-bg:   rgba(203, 171, 120, .12);
+  --sand-ln:   rgba(203, 171, 120, .30);
+  --ok-bg:     rgba(102, 199, 154, .13);
+  --bad-bg:    rgba(240, 106, 120, .12);
+
+  --on-accent: #1a0f0a;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-pop: 0 2px 6px rgba(0, 0, 0, .35), 0 22px 48px rgba(0, 0, 0, .5);
+  --ring: 0 0 0 3px rgba(224, 136, 95, .28);
+
+  --mono: 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg:        #faf7f4;
+  --surface:   #ffffff;
+  --surface-2: #f5f0eb;
+  --surface-3: #ebe4dd;
+  --line:      #e2d9d0;
+  --line-soft: #ede6de;
+
+  --text:      #221e1b;
+  --text-2:    #574f48;
+  --text-3:    #867c73;
+
+  --accent:    #b85c33;
+  --accent-2:  #8d7140;
+  --ok:        #1f7d54;
+  --warn:      #906a16;
+  --bad:       #c33547;
+
+  --accent-bg: rgba(184, 92, 51, .09);
+  --accent-ln: rgba(184, 92, 51, .28);
+  --sand-bg:   rgba(141, 113, 64, .09);
+  --sand-ln:   rgba(141, 113, 64, .26);
+  --ok-bg:     rgba(31, 125, 84, .09);
+  --bad-bg:    rgba(195, 53, 71, .08);
+
+  --on-accent: #ffffff;
+  --shadow-1: 0 1px 2px rgba(60, 40, 25, .07);
+  --shadow-pop: 0 1px 3px rgba(60, 40, 25, .1), 0 18px 40px rgba(60, 40, 25, .16);
+  --ring: 0 0 0 3px rgba(184, 92, 51, .2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans); font-size: 13px; line-height: 1.45;
+  background: var(--bg); color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  padding: 28px 16px 80px;
+  transition: background .2s, color .2s;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+svg { display: block; flex-shrink: 0; }
+
+.wrap { max-width: 1080px; margin: 0 auto; }
+
+/* ============================================================== page head */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 4px;
+}
+h1 { font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
+.theme {
+  display: flex; gap: 2px; padding: 3px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.theme button {
+  padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600;
+  color: var(--text-3);
+}
+.theme button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 18px; box-shadow: var(--shadow-1);
+}
+.card + .card { margin-top: 16px; }
+.card-title { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 650; margin-bottom: 4px; }
+.card-sub { font-size: 12px; color: var(--text-3); line-height: 1.55; margin-bottom: 16px; }
+.badge {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+  color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-ln);
+  padding: 1px 7px; border-radius: 6px;
+}
+
+/* ============================================================== fields */
+.field { margin-bottom: 14px; position: relative; }
+label, .lbl {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 6px;
+}
+.req { color: var(--bad); }
+.static {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--text-2);
+}
+.static.mono { font-family: var(--mono); font-size: 12.5px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hint { font-size: 11px; color: var(--text-3); margin-top: 5px; line-height: 1.5; }
+
+/* ============================================================== date trigger */
+.dt {
+  width: 100%; display: flex; align-items: center; gap: 11px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 9px; padding: 7px 10px 7px 8px; text-align: left;
+  transition: border-color .13s, box-shadow .13s, background .13s;
+}
+.dt:hover { border-color: var(--accent-ln); }
+.dt:focus-visible, .dt.open { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.dt-ico {
+  width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-ln);
+  font-family: var(--mono); line-height: 1; text-align: center;
+}
+.dt-ico .m { font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.dt-ico .d { font-size: 14px; font-weight: 600; margin-top: 1px; }
+.dt-main { flex: 1; min-width: 0; }
+.dt-val { font-family: var(--mono); font-size: 14px; font-weight: 500; letter-spacing: .01em; }
+.dt-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.dt-sub b { color: var(--text-2); font-weight: 600; }
+.dt-chev { color: var(--text-3); transition: transform .18s; }
+.dt.open .dt-chev { transform: rotate(180deg); color: var(--accent); }
+
+/* ============================================================== popover */
+.pop {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+  width: 332px; max-width: calc(100vw - 32px);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: var(--shadow-pop);
+  padding: 12px; transform-origin: top left;
+  animation: pop-in .16s cubic-bezier(.2, .8, .3, 1);
+}
+@keyframes pop-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+
+/* type-in */
+.type {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 9px; padding: 0 10px; transition: border-color .13s, box-shadow .13s;
+}
+.type:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.type svg { color: var(--text-3); }
+.type input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text);
+  font-family: var(--mono); font-size: 12.5px; padding: 8px 0;
+}
+.type input::placeholder { color: var(--text-3); font-family: var(--sans); font-size: 12px; }
+.parse { font-size: 11px; min-height: 17px; margin: 5px 2px 0; color: var(--text-3); }
+.parse.ok { color: var(--ok); }
+.parse.bad { color: var(--bad); }
+.parse code { font-family: var(--mono); font-size: 11px; }
+
+/* quick chips */
+.chips { display: flex; gap: 6px; margin: 6px 0 10px; flex-wrap: wrap; }
+.chip {
+  padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text-2);
+  transition: .13s;
+}
+.chip:hover { border-color: var(--accent-ln); color: var(--accent); }
+.chip.on { background: var(--accent-bg); border-color: var(--accent-ln); color: var(--accent); }
+
+/* header */
+.hd { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.hd-title { flex: 1; display: flex; gap: 2px; }
+.hd-title button {
+  padding: 5px 8px; border-radius: 7px; font-size: 14px; font-weight: 650;
+  display: flex; align-items: center; gap: 4px;
+}
+.hd-title button:hover { background: var(--surface-2); color: var(--accent); }
+.hd-title button.yr { font-family: var(--mono); font-weight: 500; color: var(--text-2); }
+.hd-title button.on { background: var(--accent-bg); color: var(--accent); }
+.nav {
+  width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+  color: var(--text-2); border: 1px solid transparent;
+}
+.nav:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line); color: var(--accent); }
+.nav:disabled { opacity: .3; cursor: default; }
+
+/* grids */
+.body { position: relative; overflow: hidden; }
+.body:focus { outline: none; }
+.dow, .days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.dow span {
+  text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-3); padding: 6px 0;
+}
+.dow span:first-child { color: var(--accent-2); }
+.days { gap: 2px; }
+.day {
+  position: relative; height: 38px; border-radius: 9px;
+  font-size: 13px; font-variant-numeric: tabular-nums;
+  color: var(--text); transition: background .1s, color .1s;
+}
+.day:hover:not(:disabled) { background: var(--surface-3); }
+.day.sun { color: var(--accent-2); }
+.day.other { color: var(--text-3); opacity: .55; }
+.day.today { font-weight: 700; color: var(--accent); }
+.day.today::after {
+  content: ''; position: absolute; left: 50%; bottom: 5px; width: 4px; height: 4px;
+  margin-left: -2px; border-radius: 50%; background: var(--accent);
+}
+.day.cursor { box-shadow: inset 0 0 0 1.5px var(--accent-ln); }
+.body:focus-visible .day.cursor { box-shadow: inset 0 0 0 2px var(--accent); }
+.day.sel {
+  background: var(--accent); color: var(--on-accent); font-weight: 700; opacity: 1;
+  box-shadow: 0 2px 8px var(--accent-ln);
+}
+.day.sel::after { background: var(--on-accent); }
+.day.sel:hover { background: var(--accent); }
+.day:disabled { color: var(--text-3); opacity: .28; cursor: not-allowed; text-decoration: line-through; }
+
+.grid12 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0 2px; }
+.cell {
+  height: 50px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--line-soft); color: var(--text-2);
+  transition: .12s;
+}
+.cell.mono { font-family: var(--mono); font-weight: 500; }
+.cell:hover:not(:disabled) { border-color: var(--accent-ln); color: var(--accent); }
+.cell.now { color: var(--accent); border-color: var(--accent-ln); }
+.cell.sel { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.cell:disabled { opacity: .3; cursor: not-allowed; }
+
+.slide-l { animation: sl .2s ease; }
+.slide-r { animation: sr .2s ease; }
+.zoom    { animation: zm .18s ease; }
+@keyframes sl { from { opacity: 0; transform: translateX(18px); } }
+@keyframes sr { from { opacity: 0; transform: translateX(-18px); } }
+@keyframes zm { from { opacity: 0; transform: scale(.96); } }
+
+/* footer */
+.ft {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft);
+}
+.ft-out { font-size: 11px; color: var(--text-3); }
+.ft-out code {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  background: var(--accent-bg); padding: 2px 6px; border-radius: 5px; margin-left: 4px;
+}
+.kbd-btn { font-size: 11px; color: var(--text-3); padding: 3px 6px; border-radius: 6px; }
+.kbd-btn:hover { color: var(--text); background: var(--surface-2); }
+.keys {
+  display: none; grid-template-columns: auto 1fr; gap: 4px 10px;
+  margin-top: 8px; font-size: 11px; color: var(--text-3);
+}
+.keys.on { display: grid; }
+kbd {
+  font-family: var(--mono); font-size: 10px; color: var(--text-2);
+  background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 4px; padding: 0 5px; white-space: nowrap;
+}
+
+/* ============================================================== name preview */
+.out {
+  font-family: var(--mono); font-size: 14.5px; line-height: 1.7; word-break: break-all;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px;
+}
+.seg { border-radius: 4px; padding: 1px 0; transition: background .2s, color .2s, box-shadow .2s; }
+.seg.sep { color: var(--text-3); }
+.seg.date { color: var(--accent-2); }
+.seg.hot { background: var(--accent-bg); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.seg.flash { animation: flash .6s ease; }
+@keyframes flash { 0% { background: var(--accent); color: var(--on-accent); } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 11px; color: var(--text-3); }
+.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; background: var(--accent-2); }
+
+.notes { list-style: none; display: grid; gap: 10px; }
+.notes li { display: flex; gap: 10px; font-size: 12px; color: var(--text-2); line-height: 1.55; }
+.notes .n {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+  font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-bg);
+}
+.notes b { color: var(--text); font-weight: 600; }
+
+@media (max-width: 520px) {
+  .row2 { grid-template-columns: 1fr; }
+  .pop { left: 0; right: 0; width: auto; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <div class="eyebrow">Mockup &middot; date field</div>
+      <h1>Calendar date picker</h1>
+    </div>
+    <div class="theme" role="group" aria-label="Theme">
+      <button class="on" data-t="dark">Dark</button>
+      <button data-t="light">Light</button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ---------------------------------------------------- form -->
+    <div class="card">
+      <div class="card-title"><span class="badge">#3</span> YouTube video whose original is unlisted</div>
+      <div class="card-sub">Click either date. Type a date, pick from the calendar, or use the keyboard.</div>
+
+      <div class="row2">
+        <div class="field">
+          <div class="lbl">Channel <span class="req">*</span></div>
+          <div class="static mono">SGL &middot; YT</div>
+        </div>
+        <div class="field">
+          <div class="lbl">Language <span class="req">*</span></div>
+          <div class="static">Hindi &nbsp;-&nbsp; hin</div>
+        </div>
+      </div>
+
+      <div class="field" data-key="video_made_date" data-iso="2021-03-12">
+        <div class="lbl">Date the video was made <span class="req">*</span></div>
+      </div>
+
+      <div class="field">
+        <div class="lbl">Title <span class="req">*</span></div>
+        <div class="static">A Lesson From Guru Nanak</div>
+      </div>
+
+      <div class="field" data-key="date" data-iso="">
+        <div class="lbl">Date translated video was created <span class="req">*</span></div>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------- preview + notes -->
+    <div>
+      <div class="card">
+        <div class="card-title">Folder name</div>
+        <div class="card-sub">Date segments light up while their calendar is open, and flash when they change.</div>
+        <div class="out" id="out"></div>
+        <div class="legend"><span><i></i>date segment, always <code style="font-family:var(--mono)">dd-Mmm-yyyy</code></span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">What this design does</div>
+        <ul class="notes" style="margin-top:10px">
+          <li><span class="n">1</span><span><b>Shows the date the way the name will.</b> The field reads <code style="font-family:var(--mono)">12-Mar-2021</code>, never the PC's locale format, plus the weekday and how long ago it was.</span></li>
+          <li><span class="n">2</span><span><b>Old dates are fast.</b> Click the month to choose from 12 months, or the year to jump through years. No clicking back 60 times to reach 2021.</span></li>
+          <li><span class="n">3</span><span><b>Type in any common form.</b> <code style="font-family:var(--mono)">12/3/21</code>, <code style="font-family:var(--mono)">12 mar 2021</code>, <code style="font-family:var(--mono)">2021-03-12</code>, <code style="font-family:var(--mono)">today</code>, <code style="font-family:var(--mono)">yesterday</code>. Day comes first, as in India.</span></li>
+          <li><span class="n">4</span><span><b>Future dates are blocked.</b> An archive date can't be tomorrow, so those days are struck through.</span></li>
+          <li><span class="n">5</span><span><b>Keyboard first.</b> Arrows move, <kbd>PgUp</kbd>/<kbd>PgDn</kbd> change month, <kbd>T</kbd> jumps to today, <kbd>Enter</kbd> picks, <kbd>Esc</kbd> closes.</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------- date utils */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+  'August', 'September', 'October', 'November', 'December'];
+const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const pad = (n) => String(n).padStart(2, '0');
+const mk = (y, m, d) => new Date(y, m, d);
+const TODAY = (() => { const t = new Date(); return mk(t.getFullYear(), t.getMonth(), t.getDate()); })();
+const iso = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const fromIso = (s) => { const [y, m, d] = s.split('-').map(Number); return mk(y, m - 1, d); };
+const fmt = (d) => pad(d.getDate()) + '-' + MON[d.getMonth()] + '-' + d.getFullYear();
+const same = (a, b) => a && b && a.getTime() === b.getTime();
+const addDays = (d, n) => mk(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const addMonths = (d, n) => {
+  const t = mk(d.getFullYear(), d.getMonth() + n, 1);
+  const last = mk(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  return mk(t.getFullYear(), t.getMonth(), Math.min(d.getDate(), last));
+};
+const isFuture = (d) => d > TODAY;
+const clampPast = (d) => (isFuture(d) ? TODAY : d);
+
+function ago(d) {
+  const days = Math.round((TODAY - d) / 864e5);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 14) return days + ' days ago';
+  if (days < 60) return Math.round(days / 7) + ' weeks ago';
+  if (days < 730) return Math.round(days / 30.44) + ' months ago';
+  return Math.floor(days / 365.25) + ' years ago';
+}
+
+/* Day-first, the way people here write dates. Returns a Date or null. */
+function parse(raw) {
+  const s = raw.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!s) return null;
+  if (s === 'today' || s === 't') return TODAY;
+  if (s === 'yesterday' || s === 'y') return addDays(TODAY, -1);
+  let y, m, d, x;
+  if ((x = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/))) {
+    [y, m, d] = [+x[1], +x[2], +x[3]];
+  } else if ((x = s.match(/^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{2}|\d{4})$/))) {
+    [d, m, y] = [+x[1], +x[2], +x[3]];
+  } else if ((x = s.match(/^(\d{1,2})[-/. ]?([a-z]{3,9})[-/., ]*(\d{2}|\d{4})$/))) {
+    const i = MON.findIndex((n) => x[2].startsWith(n.toLowerCase()));
+    if (i < 0) return null;
+    [d, m, y] = [+x[1], i + 1, +x[3]];
+  } else if ((x = s.match(/^(\d{2})(\d{2})(\d{4})$/))) {
+    [d, m, y] = [+x[1], +x[2], +x[3]];
+  } else return null;
+  if (y < 100) y += 2000;
+  const r = mk(y, m - 1, d);
+  return (r.getMonth() === m - 1 && r.getDate() === d) ? r : null;
+}
+
+/* ---------------------------------------------------------------- icons */
+const ICON = {
+  chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  left: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  right: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  kb: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10"/></svg>',
+  down: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+};
+
+/* ---------------------------------------------------------------- state */
+const VAL = {};             // field key -> Date
+let open = null;            // { key, field, trigger, pop, cursor, view, typed }
+
+document.querySelectorAll('.field[data-key]').forEach((field) => {
+  const key = field.dataset.key;
+  VAL[key] = field.dataset.iso ? fromIso(field.dataset.iso) : TODAY;
+  const t = document.createElement('button');
+  t.type = 'button';
+  t.className = 'dt';
+  t.setAttribute('aria-haspopup', 'dialog');
+  field.appendChild(t);
+  t.addEventListener('click', () => (open && open.key === key ? close() : openPicker(key, field, t)));
+  paintTrigger(key, t);
+});
+
+function paintTrigger(key, t) {
+  const d = VAL[key];
+  t.innerHTML =
+    '<span class="dt-ico"><span><span class="m">' + MON[d.getMonth()] + '</span>' +
+    '<span class="d" style="display:block">' + d.getDate() + '</span></span></span>' +
+    '<span class="dt-main"><div class="dt-val">' + fmt(d) + '</div>' +
+    '<div class="dt-sub"><b>' + WD[d.getDay()] + '</b> &middot; ' + ago(d) + '</div></span>' +
+    '<span class="dt-chev">' + ICON.chev + '</span>';
+}
+
+/* ---------------------------------------------------------------- picker */
+function openPicker(key, field, trigger) {
+  close();
+  const pop = document.createElement('div');
+  pop.className = 'pop';
+  pop.setAttribute('role', 'dialog');
+  pop.innerHTML =
+    '<div class="type">' + ICON.kb +
+      '<input placeholder="Type a date: 12/3/21, 12 Mar 2021, today" spellcheck="false" autocomplete="off"></div>' +
+    '<div class="parse"></div>' +
+    '<div class="chips">' +
+      '<button class="chip" data-q="0">Today</button>' +
+      '<button class="chip" data-q="-1">Yesterday</button>' +
+      '<button class="chip" data-q="-7">1 week ago</button>' +
+      '<button class="chip" data-q="-30">1 month ago</button>' +
+    '</div>' +
+    '<div class="hd"></div>' +
+    '<div class="body" tabindex="0"></div>' +
+    '<div class="ft"><span class="ft-out"></span><button class="kbd-btn">Shortcuts</button></div>' +
+    '<div class="keys">' +
+      '<span><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></span><span>Move by day / week</span>' +
+      '<span><kbd>PgUp</kbd> <kbd>PgDn</kbd></span><span>Previous / next month</span>' +
+      '<span><kbd>Shift</kbd>+<kbd>PgUp</kbd></span><span>Previous / next year</span>' +
+      '<span><kbd>T</kbd></span><span>Jump to today</span>' +
+      '<span><kbd>Enter</kbd> &middot; <kbd>Esc</kbd></span><span>Pick &middot; close</span>' +
+      '<span><kbd>0-9</kbd></span><span>Start typing a date</span>' +
+    '</div>';
+  field.appendChild(pop);
+  trigger.classList.add('open');
+  trigger.setAttribute('aria-expanded', 'true');
+
+  open = { key, field, trigger, pop, cursor: VAL[key], view: 'days' };
+  hot(key, true);
+
+  const input = pop.querySelector('input');
+  const body = pop.querySelector('.body');
+
+  input.addEventListener('input', () => onType(input.value));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { const d = parse(input.value); if (d && !isFuture(d)) pick(d); e.preventDefault(); }
+    if (e.key === 'Escape') { close(true); }
+    if (e.key === 'ArrowDown') { body.focus(); e.preventDefault(); }
+  });
+  pop.querySelectorAll('.chip').forEach((c) =>
+    c.addEventListener('click', () => pick(addDays(TODAY, +c.dataset.q))));
+  pop.querySelector('.kbd-btn').addEventListener('click', () =>
+    pop.querySelector('.keys').classList.toggle('on'));
+  body.addEventListener('keydown', onKey);
+
+  render();
+  body.focus();
+}
+
+function close(refocus) {
+  if (!open) return;
+  const { trigger, pop, key } = open;
+  pop.remove();
+  trigger.classList.remove('open');
+  trigger.setAttribute('aria-expanded', 'false');
+  hot(key, false);
+  open = null;
+  if (refocus) trigger.focus();
+}
+
+function pick(d) {
+  if (isFuture(d)) return;
+  const { key, trigger } = open;
+  const changed = !same(VAL[key], d);
+  VAL[key] = d;
+  paintTrigger(key, trigger);
+  close(true);
+  renderOut(changed ? key : null);
+}
+
+function onType(raw) {
+  const out = open.pop.querySelector('.parse');
+  if (!raw.trim()) { out.className = 'parse'; out.textContent = ''; return; }
+  const d = parse(raw);
+  if (!d) {
+    out.className = 'parse bad';
+    out.innerHTML = 'Can’t read that yet. Try <code>12/03/2021</code> or <code>12 Mar 2021</code>';
+    return;
+  }
+  if (isFuture(d)) {
+    out.className = 'parse bad';
+    out.innerHTML = '<code>' + fmt(d) + '</code> is in the future';
+    return;
+  }
+  out.className = 'parse ok';
+  out.innerHTML = '&#8629; Enter to use <code>' + fmt(d) + '</code> &middot; ' + WD[d.getDay()];
+  const dir = d < open.cursor ? 'slide-r' : 'slide-l';
+  const monthChanged = d.getMonth() !== open.cursor.getMonth() || d.getFullYear() !== open.cursor.getFullYear();
+  open.cursor = d;
+  open.view = 'days';
+  render(monthChanged ? dir : null);
+}
+
+function onKey(e) {
+  const c = open.cursor;
+  let n = null;
+  if (/^[0-9]$/.test(e.key)) {
+    const input = open.pop.querySelector('input');
+    input.focus();
+    return;   // the keypress lands in the input
+  }
+  if (open.view !== 'days') {
+    if (e.key === 'Escape') { open.view = 'days'; render('zoom'); e.preventDefault(); }
+    return;
+  }
+  switch (e.key) {
+    case 'ArrowLeft': n = addDays(c, -1); break;
+    case 'ArrowRight': n = addDays(c, 1); break;
+    case 'ArrowUp': n = addDays(c, -7); break;
+    case 'ArrowDown': n = addDays(c, 7); break;
+    case 'Home': n = addDays(c, -c.getDay()); break;
+    case 'End': n = addDays(c, 6 - c.getDay()); break;
+    case 'PageUp': n = addMonths(c, e.shiftKey ? -12 : -1); break;
+    case 'PageDown': n = addMonths(c, e.shiftKey ? 12 : 1); break;
+    case 't': case 'T': n = TODAY; break;
+    case 'Enter': case ' ': pick(c); e.preventDefault(); return;
+    case 'Escape': close(true); e.preventDefault(); return;
+    default: return;
+  }
+  e.preventDefault();
+  n = clampPast(n);
+  const anim = (n.getMonth() !== c.getMonth() || n.getFullYear() !== c.getFullYear())
+    ? (n < c ? 'slide-r' : 'slide-l') : null;
+  open.cursor = n;
+  render(anim);
+}
+
+/* ---------------------------------------------------------------- render */
+function render(anim) {
+  const { pop, cursor, view, key } = open;
+  const sel = VAL[key];
+  const hd = pop.querySelector('.hd');
+  const body = pop.querySelector('.body');
+  const y = cursor.getFullYear();
+  const m = cursor.getMonth();
+
+  // header
+  let title, prevOff, nextOff;
+  if (view === 'days') {
+    title = '<button class="mo" data-v="months">' + MONTH[m] + ICON.down + '</button>' +
+            '<button class="yr" data-v="years">' + y + ICON.down + '</button>';
+    nextOff = y === TODAY.getFullYear() && m === TODAY.getMonth();
+  } else if (view === 'months') {
+    title = '<button class="yr on" data-v="years">' + y + ICON.down + '</button>';
+    nextOff = y >= TODAY.getFullYear();
+  } else {
+    const s = y - (y % 12);
+    title = '<button class="yr on" data-v="days">' + s + ' – ' + (s + 11) + '</button>';
+    nextOff = s + 11 >= TODAY.getFullYear();
+  }
+  hd.innerHTML =
+    '<div class="hd-title">' + title + '</div>' +
+    '<button class="nav" data-step="-1" aria-label="Previous">' + ICON.left + '</button>' +
+    '<button class="nav" data-step="1" aria-label="Next"' + (nextOff ? ' disabled' : '') + '>' + ICON.right + '</button>';
+
+  hd.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => {
+    open.view = b.dataset.v; render('zoom');
+  }));
+  hd.querySelectorAll('.nav').forEach((b) => b.addEventListener('click', () => {
+    const s = +b.dataset.step;
+    if (open.view === 'days') open.cursor = clampPast(addMonths(open.cursor, s));
+    else if (open.view === 'months') open.cursor = clampPast(addMonths(open.cursor, 12 * s));
+    else open.cursor = clampPast(addMonths(open.cursor, 144 * s));
+    render(s < 0 ? 'slide-r' : 'slide-l');
+  }));
+
+  // body
+  let html = '';
+  if (view === 'days') {
+    html += '<div class="dow">' + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => '<span>' + d + '</span>').join('') + '</div>';
+    html += '<div class="days" role="grid">';
+    const first = mk(y, m, 1);
+    let d = addDays(first, -first.getDay());
+    for (let i = 0; i < 42; i++, d = addDays(d, 1)) {
+      const cls = ['day'];
+      if (d.getMonth() !== m) cls.push('other');
+      if (d.getDay() === 0) cls.push('sun');
+      if (same(d, TODAY)) cls.push('today');
+      if (same(d, sel)) cls.push('sel');
+      if (same(d, cursor)) cls.push('cursor');
+      const fut = isFuture(d);
+      html += '<button tabindex="-1" class="' + cls.join(' ') + '" data-iso="' + iso(d) + '"' +
+        (fut ? ' disabled title="Future dates can’t be archive dates"' : ' title="' + WD[d.getDay()] + ', ' + fmt(d) + '"') +
+        ' aria-selected="' + same(d, sel) + '">' + d.getDate() + '</button>';
+    }
+    html += '</div>';
+  } else if (view === 'months') {
+    html += '<div class="grid12">' + MON.map((n, i) => {
+      const cls = ['cell'];
+      if (sel.getFullYear() === y && sel.getMonth() === i) cls.push('sel');
+      else if (TODAY.getFullYear() === y && TODAY.getMonth() === i) cls.push('now');
+      const fut = mk(y, i, 1) > TODAY;
+      return '<button tabindex="-1" class="' + cls.join(' ') + '" data-m="' + i + '"' + (fut ? ' disabled' : '') + '>' + n + '</button>';
+    }).join('') + '</div>';
+  } else {
+    const s = y - (y % 12);
+    html += '<div class="grid12">' + Array.from({ length: 12 }, (_, i) => {
+      const yy = s + i;
+      const cls = ['cell', 'mono'];
+      if (sel.getFullYear() === yy) cls.push('sel');
+      else if (TODAY.getFullYear() === yy) cls.push('now');
+      return '<button tabindex="-1" class="' + cls.join(' ') + '" data-y="' + yy + '"' + (yy > TODAY.getFullYear() ? ' disabled' : '') + '>' + yy + '</button>';
+    }).join('') + '</div>';
+  }
+  body.innerHTML = html;
+  if (anim) body.lastElementChild.classList.add(anim);
+
+  body.querySelectorAll('.day:not(:disabled)').forEach((b) =>
+    b.addEventListener('click', () => pick(fromIso(b.dataset.iso))));
+  body.querySelectorAll('[data-m]').forEach((b) => b.addEventListener('click', () => {
+    open.cursor = clampPast(mk(y, +b.dataset.m, Math.min(cursor.getDate(), mk(y, +b.dataset.m + 1, 0).getDate())));
+    open.view = 'days'; render('zoom');
+  }));
+  body.querySelectorAll('[data-y]').forEach((b) => b.addEventListener('click', () => {
+    open.cursor = clampPast(addMonths(cursor, 12 * (+b.dataset.y - y)));
+    open.view = 'months'; render('zoom');
+  }));
+
+  // chips + footer
+  pop.querySelectorAll('.chip').forEach((c) =>
+    c.classList.toggle('on', same(addDays(TODAY, +c.dataset.q), sel)));
+  pop.querySelector('.ft-out').innerHTML = 'Goes into the name as<code>' + fmt(view === 'days' ? cursor : sel) + '</code>';
+  if (document.activeElement !== pop.querySelector('input')) body.focus();
+}
+
+/* ---------------------------------------------------------------- name preview */
+function renderOut(flashKey) {
+  const parts = [
+    ['SGLYThin'], ['_', 'sep'],
+    [fmt(VAL.video_made_date), 'date', 'video_made_date'], ['_', 'sep'],
+    ['A-Lesson-From-Guru-Nanak'], ['_', 'sep'],
+    [fmt(VAL.date), 'date', 'date'],
+  ];
+  document.getElementById('out').innerHTML = parts.map(([t, c, k]) =>
+    '<span class="seg ' + (c || '') + (k && open && open.key === k ? ' hot' : '') +
+    (k && k === flashKey ? ' flash' : '') + '"' + (k ? ' data-k="' + k + '"' : '') + '>' + t + '</span>').join('');
+}
+function hot(key, on) {
+  const s = document.querySelector('.seg[data-k="' + key + '"]');
+  if (s) s.classList.toggle('hot', on);
+}
+renderOut();
+
+/* ---------------------------------------------------------------- page chrome */
+document.addEventListener('mousedown', (e) => {
+  if (open && !open.field.contains(e.target)) close();
+});
+document.querySelectorAll('.theme button').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.theme = b.dataset.t;
+  document.querySelectorAll('.theme button').forEach((o) => o.classList.toggle('on', o === b));
+}));
+</script>
+</body>
+</html>

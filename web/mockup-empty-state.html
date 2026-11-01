@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empty State Mockup</title>
+<!-- Static design mockup: what the Create screen shows before a video link is
+     given. Uses the real styles.css, plus a few new classes below. Not served. -->
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ---------------------------------------------------------- mock switcher */
+.mock-bar {
+  position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 70;
+  display: flex; align-items: center; gap: 4px; padding: 4px;
+  background: var(--surface-3); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-2); font-size: 11.5px;
+}
+.mock-bar span { color: var(--text-3); padding: 0 8px; font-weight: 600; }
+.mock-bar button {
+  background: none; border: 0; color: var(--text-2); cursor: pointer;
+  padding: 6px 12px; border-radius: 8px; font: inherit; font-weight: 600;
+}
+.mock-bar button.on { background: var(--accent); color: #fff; }
+
+/* ------------------------------------------------- ghost name segments */
+.seg.ghost .tok {
+  color: var(--text-3); background: transparent; font-weight: 500;
+  border: 1px dashed var(--text-3); opacity: .75;
+}
+.seg.ghost .cap { opacity: .7; }
+.seg.loading .tok {
+  color: transparent; min-width: 150px; border: 1px solid var(--line);
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%; animation: shimmer 1.1s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.seg.pop .tok { animation: pop .35s cubic-bezier(.2, .9, .3, 1.4); }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } }
+
+.progress {
+  display: flex; align-items: center; gap: 10px; margin-top: 14px;
+  padding-top: 13px; border-top: 1px dashed var(--line);
+  font-size: 12px; color: var(--text-3);
+}
+.progress b { color: var(--text); font-weight: 650; }
+.progress .bar { flex: 1; height: 5px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.progress .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s; }
+
+/* ------------------------------------------------------- start card */
+#startCard { flex: 1; display: flex; flex-direction: column; }
+.side-col:has(> #startCard:not([style*="none"])) > .card:first-child { flex: none; }
+.start-hero {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; border-radius: 12px;
+  background: var(--accent-bg); border: 1px dashed var(--accent-ln);
+}
+.start-ico {
+  width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto;
+  display: grid; place-items: center; background: var(--accent); color: #fff;
+}
+.start-ico svg { width: 22px; height: 22px; }
+.start-hero h3 { font-size: 14.5px; font-weight: 650; margin-bottom: 2px; }
+.start-hero p { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.start-hero p code { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+.start-hero .primary { margin-left: auto; flex: 0 0 auto; }
+
+.checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.check {
+  display: flex; align-items: center; gap: 9px; font-size: 12.5px;
+  padding: 9px 11px; border-radius: 9px;
+  background: var(--surface-2); border: 1px solid var(--line-soft); color: var(--text-2);
+}
+.check .ic {
+  width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto;
+  display: grid; place-items: center; border: 1.5px dashed var(--text-3);
+}
+.check.done { color: var(--text); }
+.check.done .ic { border: 0; background: var(--ok); color: #0d1a12; }
+.check.done .ic svg { width: 11px; height: 11px; }
+.check .val { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.check.next { border-color: var(--accent-ln); }
+.check.next .ic { border-color: var(--accent); }
+
+.ghost-title { margin-top: 18px; }
+.ghost-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; flex: 1; }
+.ghost-folder {
+  border: 1px dashed var(--line); border-radius: 11px; padding: 11px 12px;
+  display: flex; flex-direction: column; gap: 8px; min-height: 120px;
+}
+.ghost-folder .hd { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--text-2); font-weight: 600; }
+.ghost-folder .hd svg { width: 14px; height: 14px; color: var(--warn); opacity: .7; }
+.ghost-folder .hd .pill { margin-left: auto; font-size: 9px; padding: 1px 6px; }
+.ghost-line { height: 9px; border-radius: 5px; background: var(--surface-3); opacity: .7; }
+.ghost-line.short { width: 60%; }
+.ghost-line.mid { width: 80%; }
+.ghost-folder .n { margin-top: auto; font-size: 10.5px; color: var(--text-3); }
+
+.reveal { animation: reveal .4s ease; }
+@keyframes reveal { from { opacity: 0; transform: translateY(6px); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#d9825f"/>
+        <rect x="10" y="18.6" width="28" height="16.4" rx="3" fill="#fff"/>
+        <path d="M21.7 23.1 29.3 26.8 21.7 30.5z" fill="#c05f3f"/>
+      </svg>
+      <div><h1>Archive Namer</h1><p>ILP &middot; Isha Archives</p></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Workflow</div>
+      <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create a name <span class="kbd">1</span></button>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Folder &amp; files <span class="kbd">2</span></button>
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Check a name <span class="kbd">3</span></button>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="crumb">Create a name <span style="color:var(--text-3)">&middot; #1 Dubbed YouTube video</span></div>
+      <div class="live empty" id="liveBar"><span class="dot"></span><code id="liveName">No name yet</code></div>
+    </header>
+
+    <section class="screen on">
+      <div class="two-col">
+
+        <!-- ------------------------------------------------ form -->
+        <div>
+          <div class="card form-card">
+            <div class="card-hd">
+              <span class="chip">Step 2</span>
+              <span>Dubbed YouTube video (Sadhguru / Isha Foundation)</span>
+              <span class="badge">#1</span>
+            </div>
+            <div class="card-sub">Dubbed videos from the Sadhguru and Isha Foundation channels.</div>
+
+            <div class="field">
+              <label>Channel <span class="req">*</span></label>
+              <select><option>SGYT - Sadhguru YT Channel</option></select>
+            </div>
+            <div class="field">
+              <label>Language <span class="req">*</span></label>
+              <select><option>Hindi - hin</option></select>
+              <div class="hint" style="color:var(--ok)">ISO 639-2/B: Hindi (hin)</div>
+            </div>
+            <div class="field">
+              <label>Video URL or ID <span class="req">*</span></label>
+              <input class="mono" id="url" placeholder="https://youtu.be/..." autocomplete="off" spellcheck="false">
+              <div class="hint">Paste the full <strong>English</strong> URL &mdash; the code and the title are pulled out automatically. A bare code works too.</div>
+            </div>
+            <div class="field">
+              <label>Video title in English <span class="req">*</span></label>
+              <input id="title" autocomplete="off">
+            </div>
+            <div class="field">
+              <label>Date translated video was created <span class="req">*</span></label>
+              <button type="button" class="dp-trigger">
+                <span class="dp-ico"><span class="m">Nov</span><span class="d">1</span></span>
+                <span class="dp-main"><div class="dp-val">01-Nov-2026</div><div class="dp-sub"><b>Sunday</b> &middot; Today</div></span>
+                <svg class="dp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </div>
+            <div class="field">
+              <label>How many voice tracks?</label>
+              <div class="stepper-row">
+                <div class="stepper"><button type="button">&minus;</button><input type="number" value="2"><button type="button">+</button></div>
+                <div class="stepper-note"><span>Voice1</span><span>Voice2</span><em>2 WAV files</em></div>
+              </div>
+              <div class="hint">One WAV per voice in the video. Mono, 24 bit, 48 kHz.</div>
+            </div>
+            <div class="checkline">
+              <input type="checkbox" id="ftc"><label for="ftc" style="text-transform:none;letter-spacing:0;margin:0;font-size:12px">Force Title Case (fold acronyms like USA to Usa)</label>
+            </div>
+            <div class="btn-row"><button class="ghost" id="btnClear">Clear</button></div>
+          </div>
+        </div>
+
+        <!-- ------------------------------------------------ results -->
+        <div class="side-col">
+          <div class="card">
+            <div class="copybar">
+              <div class="section-title">Folder name</div>
+              <div class="spacer"></div>
+              <button class="copy" id="btnCopy">Copy</button>
+            </div>
+            <div class="name-stage"><div class="segs" id="segs"></div></div>
+            <div id="belowName"></div>
+          </div>
+
+          <!-- before the link: what to do next -->
+          <div class="card" id="startCard">
+            <div class="start-hero">
+              <div class="start-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg></div>
+              <div>
+                <h3>Paste the English video link</h3>
+                <p>The video code and the title fill in on their own. A bare code like <code>dQw4w9WgXcQ</code> works too.</p>
+              </div>
+              <button class="primary" id="btnPaste">Paste link</button>
+            </div>
+
+            <div class="checklist" id="checklist"></div>
+
+            <div class="section-title ghost-title">What will be made</div>
+            <div class="ghost-grid">
+              <div class="ghost-folder">
+                <div class="hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Video Output</div>
+                <div class="ghost-line"></div><div class="ghost-line mid"></div>
+                <div class="n">2 files &middot; MP4</div>
+              </div>
+              <div class="ghost-folder">
+                <div class="hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Audio Output</div>
+                <div class="ghost-line"></div><div class="ghost-line short"></div>
+                <div class="n">2 files &middot; WAV</div>
+              </div>
+              <div class="ghost-folder">
+                <div class="hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>SRT_Transcript</div>
+                <div class="ghost-line mid"></div><div class="ghost-line"></div>
+                <div class="n">2 files &middot; DOCX, SRT</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- after the link: the real file list -->
+          <div class="card" id="filesCard" style="display:none;">
+            <div class="copybar">
+              <div class="section-title">What goes inside &middot; 6 files</div>
+              <div class="spacer"></div>
+              <div class="seg-ctl"><button class="on">Grouped</button><button>Tree</button></div>
+            </div>
+            <div class="files-scroll"><div class="files-scroll-in" id="outFiles"></div></div>
+            <div class="btn-row">
+              <button class="ghost">Copy all filenames</button>
+              <button class="ghost">Copy tree</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <div class="sum" id="sum">Fill in the fields to generate a name</div>
+        <div class="spacer"></div>
+        <button class="ghost">Copy name</button>
+        <button class="primary" id="btnDisk" disabled>Create on disk</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="mock-bar" role="group" aria-label="Mockup state">
+  <span>Mock state</span>
+  <button data-state="empty" class="on">Empty</button>
+  <button data-state="loading">Link pasted</button>
+  <button data-state="done">Ready</button>
+</div>
+
+<script>
+const SAMPLE_URL = 'https://youtu.be/dQw4w9WgXcQ';
+const SAMPLE_TITLE = 'A Lesson From Guru Nanak';
+const $ = (id) => document.getElementById(id);
+const S = { code: '', title: '', loading: false };
+let lookupTimer = null;
+
+const TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+const FOLDER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+
+const slug = (t) => t.trim().replace(/[^A-Za-z0-9 ]+/g, '').split(/\s+/).filter(Boolean)
+  .map((w) => w[0].toUpperCase() + w.slice(1)).join('-');
+
+function codeFrom(raw) {
+  const s = raw.trim();
+  const m = s.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/) || s.match(/^([A-Za-z0-9_-]{11})$/);
+  return m ? m[1] : '';
+}
+
+/* ------------------------------------------------------------- render */
+function render(popKey) {
+  const t = slug(S.title);
+  const parts = [
+    { key: 'ch', text: 'SGYThin', cap: 'channel + lang', ok: true },
+    { key: 'code', text: S.code || 'video code', cap: S.code ? 'video code' : 'from the link', ok: !!S.code },
+    { key: 'title', text: t || 'Title', cap: t ? 'title' : (S.loading ? 'fetching title' : 'from the link'),
+      ok: !!t, loading: S.loading && !t },
+    { key: 'date', text: '01-Nov-2026', cap: 'created', ok: true },
+  ];
+  $('segs').innerHTML = parts.map((p, i) =>
+    (i ? '<div class="seg sep"><span class="tok">_</span><span class="cap">&nbsp;</span></div>' : '')
+    + '<div class="seg ' + (p.loading ? 'loading' : p.ok ? 'c' + i : 'ghost')
+    + (p.key === popKey ? ' pop' : '') + '"><span class="tok">' + p.text + '</span>'
+    + '<span class="cap">' + p.cap + '</span></div>').join('');
+
+  const ready = parts.filter((p) => p.ok).length;
+  const done = ready === parts.length;
+  const name = 'SGYThin_' + S.code + '_' + t + '_01-Nov-2026';
+
+  $('belowName').innerHTML = done
+    ? '<div class="verdict reveal"><span class="pill ok">' + TICK.replace('<svg', '<svg width="11" height="11"')
+      + ' Spec compliant</span><span>Passes every rule in the spec</span>'
+      + '<span class="rule-dots">' + '<i></i>'.repeat(9) + '</span></div>'
+      + '<div class="reveal" style="margin-top:18px"><div class="section-title">Archive to &middot; Appendix 2</div>'
+      + '<div class="nas">' + FOLDER + 'ILP NAS Drive/video-edit-tr-priv1/' + name + '</div></div>'
+    : '<div class="progress"><span><b>' + ready + ' of 4</b> parts ready</span>'
+      + '<div class="bar"><i style="width:' + (ready / 4 * 100) + '%"></i></div></div>';
+
+  const checks = [
+    ['Channel and language', true, 'SGYT · hin'],
+    ['Video link or code', !!S.code, S.code],
+    ['Title in English', !!t, t ? t.slice(0, 18) + (t.length > 18 ? '…' : '') : ''],
+    ['Date created', true, '01-Nov-2026'],
+  ];
+  const firstOpen = checks.findIndex((c) => !c[1]);
+  $('checklist').innerHTML = checks.map((c, i) =>
+    '<div class="check' + (c[1] ? ' done' : '') + (i === firstOpen ? ' next' : '') + '">'
+    + '<span class="ic">' + (c[1] ? TICK : '') + '</span>' + c[0]
+    + (c[2] ? '<span class="val">' + c[2] + '</span>' : '') + '</div>').join('');
+
+  const wasDone = $('filesCard').style.display !== 'none';
+  $('startCard').style.display = done ? 'none' : '';
+  $('filesCard').style.display = done ? '' : 'none';
+  if (done && !wasDone) {
+    renderFiles(t);
+    $('filesCard').classList.remove('reveal'); void $('filesCard').offsetWidth;
+    $('filesCard').classList.add('reveal');
+  }
+
+  $('liveBar').classList.toggle('empty', !done);
+  $('liveName').textContent = done ? name : 'No name yet';
+  $('sum').innerHTML = done ? 'Ready &middot; <b>1 folder</b>, 7 subfolders, 6 filenames'
+    : 'Waiting for ' + checks.filter((c) => !c[1]).map((c) => c[0].toLowerCase()).join(' and ');
+  $('btnDisk').disabled = !done;
+
+  document.querySelectorAll('.mock-bar button').forEach((b) =>
+    b.classList.toggle('on', b.dataset.state === (done ? 'done' : S.code ? 'loading' : 'empty')));
+}
+
+function renderFiles(t) {
+  const groups = [
+    ['Video Output', true, [
+      ['Output_' + t + '_hin.mp4', 'The published video. MUST start with ‘Output’ or Archives rejects it.', true],
+      ['FB-Output_' + t + '_hin.mp4', 'Only if a vertical subtitled version went to Facebook.', false]]],
+    ['Audio Output', false, [
+      ['Voice1_' + t + '_hin.wav', 'Synced, de-breathed, otherwise unprocessed. Mono WAV 24 bit 48 kHz.', false],
+      ['Voice2_' + t + '_hin.wav', 'Synced, de-breathed, otherwise unprocessed. Mono WAV 24 bit 48 kHz.', false]]],
+    ['SRT_Transcript', false, [
+      ['Script_' + t + '_hin.docx', 'Bilingual docx with the final translation, or a translated transcript.', false],
+      ['Subtitles_' + t + '_hin.srt', 'Only if an SRT adjusted to your language exists.', false]]],
+  ];
+  $('outFiles').innerHTML = groups.map(([name, must, files]) =>
+    '<div class="fgroup"><div class="fgroup-hd">' + FOLDER + '<span class="nm">' + name + '</span>'
+    + (must ? '<span class="pill bad">mandatory</span>' : '')
+    + '<span class="ct">' + files.length + ' files</span></div>'
+    + files.map(([fn, note, req]) => '<div class="file-row"><div class="file-main"><div class="file-name">' + fn
+      + '</div><div class="file-meta">' + note + '</div></div><span class="file-tag ' + (req ? 'must' : 'opt') + '">'
+      + (req ? 'required' : 'optional') + '</span></div>').join('')
+    + '</div>').join('');
+}
+
+/* -------------------------------------------------------------- flow */
+function onUrl() {
+  const code = codeFrom($('url').value);
+  const changed = code !== S.code;
+  S.code = code;
+  if (changed) clearTimeout(lookupTimer);
+  if (code && changed && !S.title) {
+    S.loading = true;
+    lookupTimer = setTimeout(() => {
+      S.loading = false;
+      S.title = SAMPLE_TITLE;
+      $('title').value = SAMPLE_TITLE;
+      render('title');
+    }, 1300);
+  }
+  if (!code) S.loading = false;
+  render(changed && code ? 'code' : null);
+}
+
+$('url').addEventListener('input', onUrl);
+$('title').addEventListener('input', () => { S.title = $('title').value; S.loading = false; render(); });
+
+$('btnPaste').onclick = async () => {
+  let text = '';
+  try { text = await navigator.clipboard.readText(); } catch (e) { /* no permission in a file:// page */ }
+  if (!codeFrom(text)) text = SAMPLE_URL;
+  $('url').value = text;
+  $('url').focus();
+  onUrl();
+};
+
+function setState(st) {
+  clearTimeout(lookupTimer);
+  S.code = st === 'empty' ? '' : 'dQw4w9WgXcQ';
+  S.title = st === 'done' ? SAMPLE_TITLE : '';
+  S.loading = st === 'loading';
+  $('url').value = S.code ? SAMPLE_URL : '';
+  $('title').value = S.title;
+  render();
+}
+document.querySelectorAll('.mock-bar button').forEach((b) => { b.onclick = () => setState(b.dataset.state); });
+$('btnClear').onclick = () => setState('empty');
+
+render();
+</script>
+</body>
+</html>
