@@ -1,8 +1,6 @@
-What's new in 1.1.0
+What's new in 1.2.0
 
-- Updates itself: when a newer version is published, the app offers it at the top of the page. "Update now" installs it and restarts.
-- New Create screen: the most important detail of each category comes first (video link, date, department, exclusive code or satsang month), and the folder name shows which parts are still missing.
-- Dates and months are picked in a calendar that opens in the middle of the screen. Type a date like 12/3/21 or pick one from the month and year grids.
-- Voice tracks: a - / + stepper that previews the WAV file names.
+- Works with Claude: the naming rules are now available as an MCP server (mcp_server.py), so Claude Code or Claude Desktop can build and check archive names exactly the way the app does. Setup is in the README, under "Using it from Claude (MCP)". It runs from the Python source, not from the exe.
+- The app itself works the same as 1.1.0.
 
 Download ILP-Archive-Namer.exe below and double-click it. No Python or installation needed. Windows may say "Windows protected your PC" the first time, because the exe isn't code-signed: click More info, then Run anyway.
