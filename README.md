@@ -199,12 +199,54 @@ web/           the UI (plain HTML/CSS/JS, no build step)
   mockup.html        static design mockup of the same UI, not served
 assets/        app icon + the Pillow script that generated it
 server.py      local stdlib HTTP server
+mcp_server.py  MCP server: the engine as tools for Claude
 tests/         golden tests
 ```
 
 **When the archiving rules change, edit `data/*.json`.** Codes, NAS paths,
 languages and the template folder set are all data. Only a change to a *naming
 pattern* needs `namer/engine.py`.
+
+---
+
+## Using it from Claude (MCP)
+
+`mcp_server.py` exposes the naming engine as an MCP server, so Claude Code or
+Claude Desktop can build and check names with exactly the app's rules.
+Standard library only, and every tool is read-only - nothing is created, moved
+or renamed on disk.
+
+| Tool | Does |
+|---|---|
+| `list_categories` | the eight categories, their fields, examples and NAS routes |
+| `list_codes` | registered channel, department and language codes |
+| `build_name` | folder name + inner file names for one item, with issues |
+| `check_name` | checks an existing name; suggests a fix when it breaks a rule |
+| `slugify_title` | English title -> hyphenated name slug |
+| `lookup_video` | URL -> video code, platform, channel, and the YouTube title |
+
+**Claude Code, in this folder:** `.mcp.json` already registers it. Open the
+project, approve `ilp-archive-namer` when asked, and check it with `/mcp`.
+
+**Claude Code, from anywhere:**
+
+```bash
+claude mcp add --scope user ilp-archive-namer -- python "D:\AI Automation\ILP-Archive-Namer\mcp_server.py"
+```
+
+**Claude Desktop:** add this to `claude_desktop_config.json` (Settings ->
+Developer -> Edit Config) and restart:
+
+```json
+{
+  "mcpServers": {
+    "ilp-archive-namer": {
+      "command": "python",
+      "args": ["D:\\AI Automation\\ILP-Archive-Namer\\mcp_server.py"]
+    }
+  }
+}
+```
 
 ---
 
